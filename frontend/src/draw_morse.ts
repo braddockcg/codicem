@@ -2,7 +2,7 @@
 // Graphically draw a Morse code signal on a canvas
 // By Braddock Gaskill, March 2024
 
-const create_canvas = function (element) {
+export const create_canvas = function (element) {
     const canvas = document.createElement("canvas");
     canvas.width = window.innerWidth
     canvas.height = 100
@@ -13,7 +13,7 @@ const create_canvas = function (element) {
 /* Draws a list of symbols on a canvas.  Each symbol is a dictionary of the form:
     {dt: duration, on: true/false}
  */
-const draw_morse = function(canvas, symbols) {
+export const draw_morse = function(canvas, symbols) {
     const ctx = canvas.getContext("2d");
     const draw = function (t, dt, on, label, xscale) {
         ctx.fillStyle = on ? "green" : "black";

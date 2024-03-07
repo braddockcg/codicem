@@ -1,5 +1,7 @@
 // By Braddock Gaskill, October 2017
-const nnmorse = (function() {
+import {createTiming, timingToString} from "./timing";
+
+export const nnmorse = (function() {
     let audioSubsystem;
     let oscillator;
     let lastEventTime;

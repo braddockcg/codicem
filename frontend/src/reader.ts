@@ -1,7 +1,6 @@
-"use strict"
 // Read a Morse code signal from the server, sound it and draw it on a canvas
 
-const Reader = function(uri, filename, wpm, audioSubsystem) {
+export const Reader = function(uri: string, filename: string, wpm: number, audioSubsystem) {
     const oscillator = audioSubsystem.createOscillator(300)
     let onSymbolsCallback
     let symbols = []
@@ -11,13 +10,13 @@ const Reader = function(uri, filename, wpm, audioSubsystem) {
 
     const ws = new WebSocket(uri);
 
-    const play_next = function(timing) {
+    const play_next = function() {
         // console.log("play_next queue size = " + pending.length, " nextTime = " + nextTime, " time = " + audioSubsystem.time())
         if (pending.length == 0 || audioSubsystem.time() < nextTime) {
             setInterval(play_next, 1000 * (nextTime - audioSubsystem.time()))
             return
         }
-        timing = pending.shift()
+        const timing = pending.shift()
         if (onResultCallback) {
             onResultCallback(timing)
         }
