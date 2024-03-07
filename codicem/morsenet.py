@@ -3,9 +3,9 @@ import numpy as np
 from keras.models import Model, load_model
 from keras.layers import (Dense, Input, LSTM, Conv1D,
                           MaxPooling1D, Flatten)
-from timings_type import Timing
-import timings_type
-import util
+from .timings_type import Timing
+from . import timings_type
+from . import util
 
 
 class MorseNet(object):
@@ -231,9 +231,9 @@ class MorseNet(object):
                     print("IN: ", i, j, timings[0][i])
 
     def predict(self, input_timings_set):
-        padded_timings_set = [mg.pad_left(timings, self.num_rnn_steps,
-                                          mg.Timing(False, 0, None,
-                                                    mg.INCOMPLETE))
+        padded_timings_set = [util.pad_left(timings, self.num_rnn_steps,
+                                            timings_type.Timing(False, 0, None,
+                                                                timings_type.INCOMPLETE))
                               for timings in input_timings_set]
         input_batch, input_labels, input_space_labels, input_wpm = self.timings_set2batch(
             padded_timings_set)

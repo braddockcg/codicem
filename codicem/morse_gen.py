@@ -1,5 +1,5 @@
-from timings_type import *
-from util import *
+from .timings_type import *
+from .util import *
 
 
 def random_string(length, alphabet=None):

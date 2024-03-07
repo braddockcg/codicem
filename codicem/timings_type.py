@@ -4,7 +4,7 @@ import random
 from typing import Optional, List
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from util import intersperse, plaintext2dashdots, wpm2dit_time
+from .util import intersperse, plaintext2dashdots, wpm2dit_time
 
 INCOMPLETE = '~'
 

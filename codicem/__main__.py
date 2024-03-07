@@ -3,7 +3,7 @@ import argparse
 import asyncio
 import websockets
 
-from handler import handler
+from .handler import handler
 
 
 def main():

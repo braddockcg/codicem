@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <style>
+    .numbers {
+        text-align: justify;
+        text-justify: inter-word;
+    }
+    </style>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="build/nnmorse.js"></script>
+    <script src="build/draw_morse.js"></script>
+    <script src="build/lcwo.js"></script>
+    <script src="build/util.js"></script>
+    <script src="build/reader.js"></script>
+
+    <script>
+        $().ready(function () {
+            const audioSubsystem = AudioSubsystem()
+            const canvas = create_canvas(document.getElementById('drawing'))
+
+            const reader = Reader("ws://127.0.0.1:8765/send_morse_timings", "2M-test", 0, audioSubsystem, document.getElementById('reader_text'))
+            const reader_canvas = create_canvas(document.getElementById('reader_draw'))
+            reader.onSymbols(function(symbols) {
+                draw_morse(reader_canvas, symbols);
+            })
+            let text = ''
+            reader.onResult(function(timing) {
+                if (timing.label !== '~') {
+                    text += timing.label
+                    text = text.slice(-10)
+                    $('#reader_text').html(text)
+                }
+            })
+            nnmorse.init(audioSubsystem)
+
+            // NNMorse Hooks
+            $(window).keydown(nnmorse.keydown);
+            $(window).keyup(nnmorse.keyup);
+            $(window).mousedown(nnmorse.keydown);
+            $(window).mouseup(nnmorse.keyup);
+            // Needed when the window loses focus
+            onblur = nnmorse.keyup;
+            nnmorse.onResult(function(symbols) {
+                let text = ''
+                for (const s of symbols) {
+                    if (s.label !== '~' && s.label !== undefined) {
+                        text += s.label
+                    }
+                }
+                $('.numbers').html(text);
+            });
+            nnmorse.onSymbols(function(symbols) {
+                draw_morse(canvas, symbols);
+            });
+
+            // LCWO Hooks
+            /*
+            $(window).keydown(down);
+            $(window).keyup(up);
+            $(window).mousedown(down);
+            $(window).mouseup(up);
+            */
+
+            // Gamepad support
+            window.addEventListener("gamepadconnected", function(e) {
+                var gp = navigator.getGamepads()[0];
+                console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+                    gp.index, gp.id,
+                    gp.buttons.length, gp.axes.length);
+                });
+
+            var gameLoop = function() {
+                if (navigator.getGamepads().length === 0) {
+                    return
+                }
+                var gamepad = navigator.getGamepads()[0];
+                if (gamepad.buttons[0].pressed) {
+                    nnmorse.keydown();
+                } else {
+                    nnmorse.keyup();
+                }
+                requestAnimationFrame(gameLoop);
+            }
+            requestAnimationFrame(gameLoop);
+
+
+        });
+    </script>
+
+    <title></title>
+</head>
+<body>
+    <div class="container">
+        <center>
+            <div>READY!</div>
+            <div class="numbers">
+            </div>
+            <div id="jskey">
+                LCWO Output
+            <div id="speed">Speed</div>
+            </div>
+        </center>
+    </div>
+    <div id="drawing"></div>
+    <div id="reader">
+        <div id="reader_text"></div>
+        <div id="reader_draw"></div>
+    </div>
+</body>
+</html>

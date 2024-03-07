@@ -1,7 +1,7 @@
-from timings_type import parse_timing
 from json import dumps
 from time import time
-import morsenet
+from . import morsenet
+from .timings_type import parse_timing
 
 
 async def decode_morse(websocket, path, model_fname: str):

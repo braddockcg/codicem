@@ -1,5 +1,5 @@
-from send_morse_timings import send_morse_timings
-from decode_morse import decode_morse
+from .send_morse_timings import send_morse_timings
+from .decode_morse import decode_morse
 
 
 async def hello(websocket, path):
