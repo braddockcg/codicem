@@ -1,44 +1,55 @@
 // Utility functions for morse code project
 // By Braddock Gaskill, March 2024
 
-export const AudioSubsystem = function() {
-    const audioContext = new AudioContext();
+export class AudioSubsystem {
+    audioContext : AudioContext
 
-    const createOscillator = function(freq) {
-        const osc = audioContext.createOscillator();
+    constructor() {
+        console.log("AudioSubsystem Constructor")
+        this.audioContext = new AudioContext();
+    }
+    public createOscillator(freq: number) {
+        const osc = this.audioContext.createOscillator();
         osc.frequency.value = freq;
         osc.type = 'sine';
 
-        const gain = audioContext.createGain();
+        const gain = this.audioContext.createGain();
         gain.gain.value = 0;
         osc.connect(gain);
-        gain.connect(audioContext.destination);
+        gain.connect(this.audioContext.destination);
 
-        const s = {'osc': osc, 'gain': gain}
-        setOscillatorGain(s, 0.0)
+        const oscillator = new Oscillator(this, osc, gain)
+        oscillator.setGain(0.0)
         osc.start()
-        return s;
+        return oscillator;
     }
 
-    const setOscillatorGain = function(osc, value) {
-        const gain = osc.gain
-        audioContext.resume()
-        gain.gain.value = value;
+
+    time() { return this.audioContext.currentTime }
+}
+
+export class Oscillator {
+    public audioSubsystem: AudioSubsystem
+    public osc: OscillatorNode
+    public gain: GainNode
+
+    constructor(audioSubsystem: AudioSubsystem, osc: OscillatorNode, gain: GainNode) {
+        this.audioSubsystem = audioSubsystem
+        this.osc = osc
+        this.gain = gain
     }
 
-    const turnOnOscillator = function(osc) {
-        setOscillatorGain(osc, 0.25)
+    public setGain(value: number) {
+        this.audioSubsystem.audioContext.resume()
+        this.gain.gain.value = value;
     }
 
-    const turnOffOscillator = function(osc) {
-        setOscillatorGain(osc, 0.0)
+    public turnOn() {
+        this.setGain(0.25)
     }
 
-    return {
-        audioContext: audioContext,
-        createOscillator: createOscillator,
-        turnOnOscillator: turnOnOscillator,
-        turnOffOscillator: turnOffOscillator,
-        time: function() { return audioContext.currentTime },
+    public turnOff() {
+        this.setGain(0.0)
     }
+
 }

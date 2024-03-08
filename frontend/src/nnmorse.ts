@@ -1,15 +1,16 @@
 // By Braddock Gaskill, October 2017
-import {createTiming, timingToString} from "./timing";
+import {Timing, timingToString} from "./timing.js";
+import {AudioSubsystem, Oscillator} from "./audio.js";
 
 export const nnmorse = (function() {
-    let audioSubsystem;
-    let oscillator;
-    let lastEventTime;
-    let lastEventIsOn = "OFF";
-    let ws = null;
-    let onResultCallback;
-    let onSymbolsCallback;
-    let symbols = [];
+    let audioSubsystem: AudioSubsystem
+    let oscillator: Oscillator
+    let lastEventTime: number
+    let lastEventIsOn: boolean = false;
+    let ws: WebSocket | undefined
+    let onResultCallback: (symbols: Timing[]) => void
+    let onSymbolsCallback: (symbols: Timing[]) => void
+    let symbols: Timing[] = [];
 
     const init_socket = function () {
         console.log("Attempting to connect to websocket")
@@ -31,14 +32,14 @@ export const nnmorse = (function() {
             }
         }
         ws.onclose = function (event) {
-            ws = null;
+            ws = undefined;
         }
         ws.onerror = function (event) {
-            ws = null;
+            ws = undefined;
         }
     }
 
-    const init = function(audioSubsys) {
+    const init = function(audioSubsys: AudioSubsystem) {
         audioSubsystem = audioSubsys
         oscillator = audioSubsystem.createOscillator(440)
         lastEventTime = 0;
@@ -47,13 +48,13 @@ export const nnmorse = (function() {
     }
 
 
-    const send = function (eventIsOn) {
+    const send = function (eventIsOn: boolean) {
         const t = audioSubsystem.time()
         const dt = 1000. * (t - lastEventTime)
         lastEventTime = t
 
-        const timing = createTiming(eventIsOn, dt)
-        if (ws.readyState === WebSocket.OPEN) {
+        const timing = new Timing(eventIsOn, dt)
+        if (ws && ws.readyState === WebSocket.OPEN) {
             // ws.send(eventIsOn + "\t" + dt.toFixed(2) + "\t~\t~");
             // console.log(timingToString(timing))
             ws.send(timingToString(timing))
@@ -74,7 +75,7 @@ export const nnmorse = (function() {
         if (!ws) {
             init_socket();
         }
-        if (ws.readyState !== WebSocket.OPEN) {
+        if (ws && ws.readyState !== WebSocket.OPEN) {
             console.log("Web socket status is: " + ws.readyState)
         }
         send(lastEventIsOn)
@@ -86,29 +87,27 @@ export const nnmorse = (function() {
         const t0 = audioSubsystem.time()
         const t0date = new Date().getTime();
 
-        audioSubsystem.turnOnOscillator(oscillator)
+        oscillator.turnOn()
         document.body.style.background = 'red';
-        send("OFF");
-        lastEventIsOn = "ON";
+        send(false);
+        lastEventIsOn = true;
 
         // DEBUG
-        console.log("A: ", audioSubsystem.time() - t0);
-        console.log("B: ", new Date().getTime() - t0date);
-        console.log("outputLatency: ", audioSubsystem.audioContext.outputLatency);
-        console.log("baseLatency: ", audioSubsystem.audioContext.baseLatency);
+        // console.log("outputLatency: ", audioSubsystem.audioContext.outputLatency);
+        // console.log("baseLatency: ", audioSubsystem.audioContext.baseLatency);
 
     };
 
     const keyup = function() {
-        audioSubsystem.turnOffOscillator(oscillator)
-        document.body.style.background = 'white';
-        send("ON");
-        lastEventIsOn = "OFF";
-    };
+        oscillator.turnOff()
+        document.body.style.background = 'white'
+        send(true)
+        lastEventIsOn = false
+    }
 
-    const onResult = function(callback) {
-        onResultCallback = callback;
-    };
+    const onResult = function(callback: (symbols: Timing[]) => void) {
+        onResultCallback = callback
+    }
 
     return {
         init: init,
@@ -116,7 +115,7 @@ export const nnmorse = (function() {
         keyup: keyup,
         onResult: onResult,
         symbols: symbols,
-        onSymbols: function(callback) {
+        onSymbols: function(callback: (symbols: Timing[]) => void) {
             onSymbolsCallback = callback;
         }
     }

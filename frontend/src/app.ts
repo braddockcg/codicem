@@ -1,7 +1,8 @@
-import {AudioSubsystem} from "./audio";
-import {Reader} from "./reader";
-import {create_canvas, draw_morse} from "./draw_morse";
-import {nnmorse} from "./nnmorse";
+import {AudioSubsystem} from "./audio.js";
+import {Reader} from "./reader.js";
+import {create_canvas, draw_morse} from "./draw_morse.js";
+import {nnmorse} from "./nnmorse.js";
+import {Timing} from "./timing.js";
 
 export class App {
     constructor() {
@@ -12,16 +13,17 @@ export class App {
         console.log("App init")
 
 
-        const audioSubsystem = AudioSubsystem()
+        const audioSubsystem = new AudioSubsystem()
+        const canvasElement = document.getElementById('drawing')
         const canvas = create_canvas(document.getElementById('drawing'))
 
         const reader = Reader("ws://127.0.0.1:8765/send_morse_timings", "2M-test", 0, audioSubsystem)
         const reader_canvas = create_canvas(document.getElementById('reader_draw'))
-        reader.onSymbols(function (symbols) {
+        reader.onSymbols(function (symbols: Timing[]) {
             draw_morse(reader_canvas, symbols);
         })
         let text = ''
-        reader.onResult(function (timing) {
+        reader.onResult(function (timing: Timing) {
             if (timing.label !== '~') {
                 text += timing.label
                 text = text.slice(-10)
@@ -68,20 +70,24 @@ export class App {
 // Gamepad support
         window.addEventListener("gamepadconnected", function (e) {
             var gp = navigator.getGamepads()[0];
-            console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-                gp.index, gp.id,
-                gp.buttons.length, gp.axes.length);
+            if (gp) {
+                console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+                    gp.index, gp.id,
+                    gp.buttons.length, gp.axes.length);
+            }
         });
 
-        var gameLoop = function () {
+        const gameLoop = function () {
             if (navigator.getGamepads().length === 0) {
                 return
             }
-            var gamepad = navigator.getGamepads()[0];
-            if (gamepad.buttons[0].pressed) {
-                nnmorse.keydown();
-            } else {
-                nnmorse.keyup();
+            let gamepad = navigator.getGamepads()[0];
+            if (gamepad) {
+                if (gamepad.buttons[0].pressed) {
+                    nnmorse.keydown();
+                } else {
+                    nnmorse.keyup();
+                }
             }
             requestAnimationFrame(gameLoop);
         }

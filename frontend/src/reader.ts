@@ -1,14 +1,18 @@
 // Read a Morse code signal from the server, sound it and draw it on a canvas
 
-export const Reader = function(uri: string, filename: string, wpm: number, audioSubsystem) {
-    const oscillator = audioSubsystem.createOscillator(300)
-    let onSymbolsCallback
-    let symbols = []
-    let pending = []
-    let nextTime = 0
-    let onResultCallback
+import {Timing, timingFromJson} from "./timing.js";
+import {AudioSubsystem} from "./audio.js";
+import {EasySocket} from "./easy_socket.js";
 
-    const ws = new WebSocket(uri);
+export const Reader = function(uri: string, filename: string, wpm: number, audioSubsystem: AudioSubsystem) {
+    const oscillator = audioSubsystem.createOscillator(300)
+    let onSymbolsCallback: (symbols: Timing[]) => void
+    let symbols: Timing[] = []
+    let pending: Timing[] = []
+    let nextTime = 0
+    let onResultCallback: (timing: Timing) => void
+
+    const easysocket = new EasySocket(uri);
 
     const play_next = function() {
         // console.log("play_next queue size = " + pending.length, " nextTime = " + nextTime, " time = " + audioSubsystem.time())
@@ -17,13 +21,16 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
             return
         }
         const timing = pending.shift()
-        if (onResultCallback) {
+        if (!timing) {
+            return
+        }
+        if (onResultCallback && timing) {
             onResultCallback(timing)
         }
-        if (timing.is_on === "ON") {
-            audioSubsystem.turnOnOscillator(oscillator)
+        if (timing.is_on) {
+            oscillator.turnOn()
         } else {
-            audioSubsystem.turnOffOscillator(oscillator)
+            oscillator.turnOff()
         }
         symbols.push(timing)
         symbols = symbols.slice(-30)
@@ -34,34 +41,24 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
         setInterval(play_next, timing.duration)
     }
 
-    ws.onmessage = function(event) {
-        console.log("Reader received: " + event.data)
-        const timing = JSON.parse(event.data);
-        timing.is_on = timing.is_on ? "ON" : "OFF"
+    easysocket.onTextMessage = function(text) {
+        const timing = timingFromJson(text);
         pending.push(timing)
         if (pending.length == 1) {
             play_next()
         }
     }
 
-    ws.onclose = function(event) {
-        console.log("Reader Connection closed");
-    }
-
-    ws.onerror = function(event) {
-        console.log("Reader Connection error");
-    }
-
-    ws.onopen = function(event) {
+    easysocket.onOpenCallback = function(event) {
         console.log("Reader Connection opened");
-        ws.send(wpm + "\t" + filename)
+        easysocket.send(wpm + "\t" + filename)
     }
 
     return {
-        onSymbols: function(callback) {
+        onSymbols: function(callback: (symbols: Timing[]) => void) {
             onSymbolsCallback = callback
         },
-        onResult: function(callback) {
+        onResult: function(callback: (timing: Timing) => void) {
             onResultCallback = callback
         }
     }
