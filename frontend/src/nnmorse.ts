@@ -1,22 +1,23 @@
 // By Braddock Gaskill, October 2017
 import {Timing, timingToString} from "./timing.js";
 import {AudioSubsystem, Oscillator} from "./audio.js";
+import {EasySocket} from "./easy_socket.js";
 
 export const nnmorse = (function() {
     let audioSubsystem: AudioSubsystem
     let oscillator: Oscillator
     let lastEventTime: number
     let lastEventIsOn: boolean = false;
-    let ws: WebSocket | undefined
+    let easysocket: EasySocket | null = null
     let onResultCallback: (symbols: Timing[]) => void
     let onSymbolsCallback: (symbols: Timing[]) => void
     let symbols: Timing[] = [];
 
     const init_socket = function () {
         console.log("Attempting to connect to websocket")
-        ws = new WebSocket("ws://127.0.0.1:8765/decode_morse");
-        ws.onmessage = function(event) {
-            const outputs = JSON.parse(event.data)
+        easysocket = new EasySocket("ws://127.0.0.1:8765/decode_morse");
+        easysocket.onJSONMessage = function(json) {
+            const outputs = json as Timing[]
             const msg = outputs.slice(-1)[0]
             if (msg === undefined) {
                 return
@@ -30,12 +31,6 @@ export const nnmorse = (function() {
             if (onResultCallback) {
                 onResultCallback(symbols)
             }
-        }
-        ws.onclose = function (event) {
-            ws = undefined;
-        }
-        ws.onerror = function (event) {
-            ws = undefined;
         }
     }
 
@@ -54,11 +49,7 @@ export const nnmorse = (function() {
         lastEventTime = t
 
         const timing = new Timing(eventIsOn, dt)
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            // ws.send(eventIsOn + "\t" + dt.toFixed(2) + "\t~\t~");
-            // console.log(timingToString(timing))
-            ws.send(timingToString(timing))
-        }
+        easysocket?.send(timingToString(timing))
 
         if (symbols.length > 0 && symbols[symbols.length - 1].is_on === eventIsOn) {
             symbols[symbols.length - 1].duration += dt;
@@ -72,12 +63,6 @@ export const nnmorse = (function() {
     }
 
     const timeout = function () {
-        if (!ws) {
-            init_socket();
-        }
-        if (ws && ws.readyState !== WebSocket.OPEN) {
-            console.log("Web socket status is: " + ws.readyState)
-        }
         send(lastEventIsOn)
         setTimeout(timeout, 250)
     }

@@ -49,7 +49,7 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
         }
     }
 
-    easysocket.onOpenCallback = function(event) {
+    easysocket.onOpen = function(event) {
         console.log("Reader Connection opened");
         easysocket.send(wpm + "\t" + filename)
     }

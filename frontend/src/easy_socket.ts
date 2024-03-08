@@ -4,11 +4,11 @@ export class EasySocket {
     terminated: boolean = false
 
     // Users can set these callbacks
-    onMessageCallback: ((event: MessageEvent) => void) | undefined
-    onCloseCallback: ((event: CloseEvent) => void) | undefined
-    onErrorCallback: ((event: Event) => void) | undefined
-    onOpenCallback: ((event: Event) => void) | undefined
-    onJSONMessage: ((message: object) => void) | undefined
+    onMessage: ((event: MessageEvent) => void) | undefined
+    onClose: ((event: CloseEvent) => void) | undefined
+    onError: ((event: Event) => void) | undefined
+    onOpen: ((event: Event) => void) | undefined
+    onJSONMessage: ((message: object | object[]) => void) | undefined
     onTextMessage: ((message: string) => void) | undefined
 
     constructor(uri: string) {
@@ -19,10 +19,10 @@ export class EasySocket {
 
     private init() {
         this.ws = new WebSocket(this.uri)
-        this.ws.onmessage = this.messageHandler
-        this.ws.onclose = this.closeHandler
-        this.ws.onerror = this.errorHandler
-        this.ws.onopen = this.openHandler
+        this.ws.onmessage = this.messageHandler.bind(this)
+        this.ws.onclose = this.closeHandler.bind(this)
+        this.ws.onerror = this.errorHandler.bind(this)
+        this.ws.onopen = this.openHandler.bind(this)
     }
 
     send(message: string): boolean {
@@ -55,25 +55,25 @@ export class EasySocket {
 
     private closeHandler(event: CloseEvent) {
         console.log("EasySocket Close: ", event, " uri: ", this.uri)
-        if (this.onCloseCallback) {
-            this.onCloseCallback(event)
+        if (this.onClose) {
+            this.onClose(event)
         }
     }
 
     private errorHandler(event: Event) {
         console.log("EasySocket Error: ", event, " uri: ", this.uri)
-        if (this.onErrorCallback) {
-            this.onErrorCallback(event)
+        if (this.onError) {
+            this.onError(event)
         }
     }
 
     private openHandler(event: Event) {
         console.log("EasySocket Open: ", event, " uri: ", this.uri)
-        if (this.onOpenCallback) {
-            this.onOpenCallback(event)
+        if (this.onOpen) {
+            this.onOpen(event)
         }
     }
-
+open
     private periodicHandler() {
         if (this.terminated || this.ws === null) {
             return
@@ -82,6 +82,6 @@ export class EasySocket {
             console.log("Reconnecting to {this.uri}")
             this.init()
         }
-        setTimeout(this.periodicHandler, 1000)
+        setTimeout(this.periodicHandler.bind(this), 1000)
     }
 }
