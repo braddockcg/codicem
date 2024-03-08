@@ -2,8 +2,10 @@ import {AudioSubsystem} from "./audio";
 import {Reader} from "./reader";
 import {create_canvas, draw_morse} from "./draw_morse";
 import {nnmorse} from "./nnmorse";
-import {Timing} from "./timing";
+import {Timing, TimingBuffer, timingToString} from "./timing";
 import {autorun} from "mobx";
+import {KeyTimer} from "./keytimer";
+import {Recognizer} from "./recognizer";
 
 export class App {
     constructor() {
@@ -26,22 +28,38 @@ export class App {
             }
         })
 
-        nnmorse.init(audioSubsystem)
+        // KeyTimer setup
+        const timingBuffer = new TimingBuffer(48)
+        const keyTimer = new KeyTimer(timingBuffer)
 
-        // NNMorse Hooks
-        document.addEventListener('keydown', (ev: KeyboardEvent) => nnmorse.keydown());
-        document.addEventListener('keyup', (ev: KeyboardEvent) => nnmorse.keyup());
-        document.addEventListener('mousedown', (ev: MouseEvent) => nnmorse.keydown());
-        document.addEventListener('mouseup', (ev: MouseEvent) => nnmorse.keyup());
-
-        // Needed when the window loses focus
-        onblur = nnmorse.keyup;
         autorun(() => {
-            draw_morse(nnmorse_canvas, nnmorse.symbols.timings)
-            const ele = document.getElementById('nnmorse_text')
-            if (ele !== null) {
-                ele.innerHTML = nnmorse.symbols.labels
-            }
+            console.log("KeyTimer: " + timingToString(keyTimer.timing))
+        })
+
+        document.addEventListener('keydown', (ev: KeyboardEvent) => keyTimer.keydown());
+        document.addEventListener('keyup', (ev: KeyboardEvent) => keyTimer.keyup());
+        document.addEventListener('mousedown', (ev: MouseEvent) => keyTimer.keydown());
+        document.addEventListener('mouseup', (ev: MouseEvent) => keyTimer.keyup());
+        onblur = keyTimer.keyup
+
+        const recognizer = new Recognizer("ws://127.0.0.1:8765/decode_morse", timingBuffer)
+
+        // nnmorse.init(audioSubsystem)
+
+        // NNMorse HtimingBufferooks
+        // document.addEventListener('keydown', (ev: KeyboardEvent) => nnmorse.keydown());
+        // document.addEventListener('keyup', (ev: KeyboardEvent) => nnmorse.keyup());
+        // document.addEventListener('mousedown', (ev: MouseEvent) => nnmorse.keydown());
+        // document.addEventListener('mouseup', (ev: MouseEvent) => nnmorse.keyup());
+        //
+        // // Needed when the window loses focus
+        // onblur = nnmorse.keyup;
+        autorun(() => {
+             draw_morse(nnmorse_canvas, timingBuffer.timings)
+             const ele = document.getElementById('nnmorse_text')
+             if (ele !== null) {
+                 ele.innerHTML = timingBuffer.labels
+             }
         })
 
 // LCWO Hooks

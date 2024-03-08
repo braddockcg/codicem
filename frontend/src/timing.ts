@@ -19,6 +19,11 @@ export class Timing {
         this.wpm = wpm
         this.tid = tid === -1 ? global_tid++ : tid
     }
+
+    @action
+    addDuration(dt: number) {
+        this.duration += dt
+    }
 }
 
 export const timingToString = function(timing: Timing) {
@@ -78,6 +83,11 @@ export class TimingBuffer {
     @computed
     get toString() {
         return this.timings.map(timingToString).join("\n")
+    }
+
+    @computed
+    get last(): Timing | undefined {
+        return this.timings[this.timings.length - 1]
     }
 
     @computed
