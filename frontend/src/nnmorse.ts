@@ -1,5 +1,5 @@
 // By Braddock Gaskill, October 2017
-import {Timing, timingToString} from "./timing";
+import {Timing, TimingBuffer, timingToString} from "./timing";
 import {AudioSubsystem, Oscillator} from "./audio";
 import {EasySocket} from "./easy_socket";
 
@@ -9,9 +9,7 @@ export const nnmorse = (function() {
     let lastEventTime: number
     let lastEventIsOn: boolean = false;
     let easysocket: EasySocket | null = null
-    let onResultCallback: (symbols: Timing[]) => void
-    let onSymbolsCallback: (symbols: Timing[]) => void
-    let symbols: Timing[] = [];
+    let symbols: TimingBuffer = new TimingBuffer(48);
 
     const init_socket = function () {
         console.log("Attempting to connect to websocket")
@@ -22,15 +20,8 @@ export const nnmorse = (function() {
             if (msg === undefined) {
                 return
             }
-            for (const s of symbols) {
-                if (s.tid === msg.tid) {
-                    s.label = msg.label
-                }
-            }
-            symbols = symbols.slice(-40)
-            if (onResultCallback) {
-                onResultCallback(symbols)
-            }
+            const t = symbols.getById(msg.tid)
+            if (t) t.label = msg.label
         }
     }
 
@@ -52,14 +43,10 @@ export const nnmorse = (function() {
         const timing = new Timing(eventIsOn, dt)
         easysocket?.send(timingToString(timing))
 
-        if (symbols.length > 0 && symbols[symbols.length - 1].is_on === eventIsOn) {
-            symbols[symbols.length - 1].duration += dt;
+        if (symbols.timings.length > 0 && symbols.timings[symbols.timings.length - 1].is_on === eventIsOn) {
+            symbols.timings[symbols.timings.length - 1].duration += dt;
         } else {
             symbols.push(timing)
-        }
-        symbols = symbols.slice(-40)
-        if (onSymbolsCallback) {
-            onSymbolsCallback(symbols)
         }
     }
 
@@ -91,18 +78,11 @@ export const nnmorse = (function() {
         lastEventIsOn = false
     }
 
-    const onResult = function(callback: (symbols: Timing[]) => void) {
-        onResultCallback = callback
-    }
 
     return {
         init: init,
+        symbols,
         keydown: keydown,
         keyup: keyup,
-        onResult: onResult,
-        symbols: symbols,
-        onSymbols: function(callback: (symbols: Timing[]) => void) {
-            onSymbolsCallback = callback;
-        }
     }
 })();

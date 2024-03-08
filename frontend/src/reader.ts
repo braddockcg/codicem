@@ -1,13 +1,13 @@
 // Read a Morse code signal from the server, sound it and draw it on a canvas
 
-import {Timing, timingFromJson} from "./timing";
+import {Timing, timingFromJson, TimingBuffer} from "./timing";
 import {AudioSubsystem} from "./audio";
 import {EasySocket} from "./easy_socket";
 
 export const Reader = function(uri: string, filename: string, wpm: number, audioSubsystem: AudioSubsystem) {
     const oscillator = audioSubsystem.createOscillator(300)
-    let onSymbolsCallback: (symbols: Timing[]) => void
-    let symbols: Timing[] = []
+    let onSymbolsCallback: (symbols: TimingBuffer) => void
+    let symbols = new TimingBuffer(30)
     let pending: Timing[] = []
     let nextTime = 0
     let onResultCallback: (timing: Timing) => void
@@ -33,7 +33,6 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
             oscillator.turnOff()
         }
         symbols.push(timing)
-        symbols = symbols.slice(-30)
         if (onSymbolsCallback) {
             onSymbolsCallback(symbols)
         }
@@ -55,9 +54,7 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
     }
 
     return {
-        onSymbols: function(callback: (symbols: Timing[]) => void) {
-            onSymbolsCallback = callback
-        },
+        symbols,
         onResult: function(callback: (timing: Timing) => void) {
             onResultCallback = callback
         }

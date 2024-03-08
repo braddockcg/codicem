@@ -3,6 +3,7 @@ import {Reader} from "./reader";
 import {create_canvas, draw_morse} from "./draw_morse";
 import {nnmorse} from "./nnmorse";
 import {Timing} from "./timing";
+import {autorun} from "mobx";
 
 export class App {
     constructor() {
@@ -12,27 +13,19 @@ export class App {
     public init() {
         console.log("App init")
 
-
         const audioSubsystem = new AudioSubsystem()
-        const canvasElement = document.getElementById('drawing')
-        const canvas = create_canvas(document.getElementById('drawing'))
+        const nnmorse_canvas = create_canvas(document.getElementById('nnmorse_draw'))
 
         const reader = Reader("ws://127.0.0.1:8765/send_morse_timings", "2M-test", 0, audioSubsystem)
         const reader_canvas = create_canvas(document.getElementById('reader_draw'))
-        reader.onSymbols(function (symbols: Timing[]) {
-            draw_morse(reader_canvas, symbols);
-        })
-        let text = ''
-        reader.onResult(function (timing: Timing) {
-            if (timing.label !== '~') {
-                text += timing.label
-                text = text.slice(-10)
-                const ele = document.getElementById('reader_text')
-                if (ele !== null) {
-                    ele.innerHTML = text
-                }
+        autorun(() => {
+            draw_morse(reader_canvas, reader.symbols.timings)
+            const ele = document.getElementById('reader_text')
+            if (ele !== null) {
+                ele.innerHTML = reader.symbols.labels
             }
         })
+
         nnmorse.init(audioSubsystem)
 
         // NNMorse Hooks
@@ -43,21 +36,13 @@ export class App {
 
         // Needed when the window loses focus
         onblur = nnmorse.keyup;
-        nnmorse.onResult(function (symbols) {
-            let text = ''
-            for (const s of symbols) {
-                if (s.label !== '~' && s.label !== undefined) {
-                    text += s.label
-                }
+        autorun(() => {
+            draw_morse(nnmorse_canvas, nnmorse.symbols.timings)
+            const ele = document.getElementById('nnmorse_text')
+            if (ele !== null) {
+                ele.innerHTML = nnmorse.symbols.labels
             }
-            const eles = document.getElementsByClassName('numbers')
-            for (let i = 0; i < eles.length; i++) {
-                eles[i].innerHTML = text
-            }
-        });
-        nnmorse.onSymbols(function (symbols) {
-            draw_morse(canvas, symbols);
-        });
+        })
 
 // LCWO Hooks
         /*

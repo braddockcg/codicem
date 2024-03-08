@@ -35,25 +35,44 @@ export const timingFromJson = function(json: any) {
     return new Timing(s.is_on, s.duration, s.stype, s.label, s.wpm, s.tid)
 }
 
-export class Timings {
+export class TimingBuffer {
     @observable accessor timings: Timing[] = []
+    @observable accessor capacity: number
 
-    constructor() {
+    constructor(capacity: number = -1) {
+        this.capacity = capacity
     }
 
     @action
-    append(timing: Timing) {
+    private truncate() {
+        if (this.capacity === -1) {
+            return
+        }
+        while (this.timings.length > this.capacity) {
+            this.timings.shift()
+        }
+    }
+    @action
+    push(timing: Timing) {
         this.timings.push(timing)
+        this.truncate()
     }
 
     @action
     removeTiming(timing: Timing) {
-        this.timings = this.timings.filter(t => t.tid !== timing.tid)
+        for (const t of this.timings) {
+            if (t === timing) {
+                this.timings.splice(this.timings.indexOf(t), 1)
+                return
+            }
+        }
     }
 
     @action
     setTimings(timings: Timing[]) {
-        this.timings = timings
+        this.timings.splice(0)
+        this.timings.concat(timings)
+        this.truncate()
     }
 
     @computed
@@ -62,11 +81,12 @@ export class Timings {
     }
 
     @computed
-    get labels() : string[] {
-        return this.timings.filter(e => (e.label !== '~')).map(t => t.label)
+    get labels() : string {
+        const labels = this.timings.filter(e => (e.label !== '~')).map(t => t.label)
+        return labels.join('')
     }
 
-    getById(tid: number) {
+    getById(tid: number): Timing | undefined {
         return this.timings.filter(t => t.tid === tid)[0]
     }
 }

@@ -1,13 +1,15 @@
 import {App} from './app'
+let app: App | null = null
 
 document.addEventListener('DOMContentLoaded', function () {
     const startup = function () {
-        document.removeEventListener('mousedown', startup, false)
-        document.removeEventListener('keydown', startup, false)
-        const app = new App()
-        app.init()
+        if (app === null) {
+            app = new App()
+            app.init()
+        }
+        document.removeEventListener('mousedown', startup)
+        document.removeEventListener('keydown', startup)
     }
-    document.addEventListener('mousedown', startup, false)
-    document.addEventListener('keydown', startup, false)
-    console.log("READY FOR INPUT")
+    document.addEventListener('mousedown', startup)
+    document.addEventListener('keydown', startup)
 })
