@@ -9,4 +9,5 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     document.addEventListener('mousedown', startup, false)
     document.addEventListener('keydown', startup, false)
+    console.log("READY FOR INPUT AGAIN")
 })
