@@ -12,8 +12,30 @@ export class App {
         console.log("App Constructor")
     }
 
+    public html() {
+        return `
+        <div id="nnmorse">
+            <h2>Recognizer</h2>
+            <div id="nnmorse_draw"></div>
+            <div id="nnmorse_text"></div>
+        </div>
+        <div id="reader">
+            <h2>Reader</h2>
+            <div id="reader_draw"></div>
+            <div id="reader_text"></div>
+        </div>
+        `
+    }
+
     public init() {
         console.log("App init")
+
+        const container = document.getElementById('container')
+        if (!container) {
+            console.log("ERROR: container not found")
+            return
+        }
+        container.innerHTML = this.html()
 
         const audioSubsystem = new AudioSubsystem()
         const nnmorse_canvas = create_canvas(document.getElementById('nnmorse_draw'))
@@ -44,16 +66,6 @@ export class App {
 
         const recognizer = new Recognizer("ws://127.0.0.1:8765/decode_morse", timingBuffer)
 
-        // nnmorse.init(audioSubsystem)
-
-        // NNMorse HtimingBufferooks
-        // document.addEventListener('keydown', (ev: KeyboardEvent) => nnmorse.keydown());
-        // document.addEventListener('keyup', (ev: KeyboardEvent) => nnmorse.keyup());
-        // document.addEventListener('mousedown', (ev: MouseEvent) => nnmorse.keydown());
-        // document.addEventListener('mouseup', (ev: MouseEvent) => nnmorse.keyup());
-        //
-        // // Needed when the window loses focus
-        // onblur = nnmorse.keyup;
         autorun(() => {
              draw_morse(nnmorse_canvas, timingBuffer.timings)
              const ele = document.getElementById('nnmorse_text')
@@ -87,9 +99,9 @@ export class App {
             let gamepad = navigator.getGamepads()[0];
             if (gamepad) {
                 if (gamepad.buttons[0].pressed) {
-                    nnmorse.keydown();
+                    keyTimer.keydown();
                 } else {
-                    nnmorse.keyup();
+                    keyTimer.keyup();
                 }
             }
             requestAnimationFrame(gameLoop);
