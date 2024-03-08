@@ -39,6 +39,7 @@ export const nnmorse = (function() {
         oscillator = audioSubsystem.createOscillator(440)
         lastEventTime = 0;
 
+        init_socket()
         setTimeout(timeout, 250)
     }
 
