@@ -10,20 +10,8 @@
 
     <!-- script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script -->
     <script src="static/lcwo.js"></script>
-    <script type="module" src="build/app.js"></script>
-    <script type="module">
-        import {App} from './build/app.js'
-        document.addEventListener('DOMContentLoaded', function () {
-            const startup = function () {
-                document.removeEventListener('mousedown', startup, false)
-                document.removeEventListener('keydown', startup, false)
-                const app = new App()
-                app.init()
-            }
-            document.addEventListener('mousedown', startup, false)
-            document.addEventListener('keydown', startup, false)
-        })
-    </script>
+    <!-- script type="module" src="build/app.js"></script-->
+    <script type="module" src="codicem-bundle.js"></script>
 
     <title></title>
 </head>

@@ -1,8 +1,8 @@
 // Read a Morse code signal from the server, sound it and draw it on a canvas
 
-import {Timing, timingFromJson} from "./timing.js";
-import {AudioSubsystem} from "./audio.js";
-import {EasySocket} from "./easy_socket.js";
+import {Timing, timingFromJson} from "./timing";
+import {AudioSubsystem} from "./audio";
+import {EasySocket} from "./easy_socket";
 
 export const Reader = function(uri: string, filename: string, wpm: number, audioSubsystem: AudioSubsystem) {
     const oscillator = audioSubsystem.createOscillator(300)

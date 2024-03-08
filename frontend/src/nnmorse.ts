@@ -1,7 +1,7 @@
 // By Braddock Gaskill, October 2017
-import {Timing, timingToString} from "./timing.js";
-import {AudioSubsystem, Oscillator} from "./audio.js";
-import {EasySocket} from "./easy_socket.js";
+import {Timing, timingToString} from "./timing";
+import {AudioSubsystem, Oscillator} from "./audio";
+import {EasySocket} from "./easy_socket";
 
 export const nnmorse = (function() {
     let audioSubsystem: AudioSubsystem

@@ -1,8 +1,8 @@
-import {AudioSubsystem} from "./audio.js";
-import {Reader} from "./reader.js";
-import {create_canvas, draw_morse} from "./draw_morse.js";
-import {nnmorse} from "./nnmorse.js";
-import {Timing} from "./timing.js";
+import {AudioSubsystem} from "./audio";
+import {Reader} from "./reader";
+import {create_canvas, draw_morse} from "./draw_morse";
+import {nnmorse} from "./nnmorse";
+import {Timing} from "./timing";
 
 export class App {
     constructor() {

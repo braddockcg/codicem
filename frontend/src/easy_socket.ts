@@ -73,7 +73,7 @@ export class EasySocket {
             this.onOpen(event)
         }
     }
-open
+
     private periodicHandler() {
         if (this.terminated || this.ws === null) {
             return
