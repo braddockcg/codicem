@@ -6,6 +6,7 @@ import {Timing, TimingBuffer, timingToString} from "./timing";
 import {autorun} from "mobx";
 import {KeyTimer} from "./keytimer";
 import {Recognizer} from "./recognizer";
+import {setBackgroundColor} from "./util";
 
 export class App {
     constructor() {
@@ -51,18 +52,21 @@ export class App {
         })
 
         // KeyTimer setup
-        const timingBuffer = new TimingBuffer(48)
+        const timingBuffer = new TimingBuffer(24)
         const keyTimer = new KeyTimer(timingBuffer)
 
         autorun(() => {
-            console.log("KeyTimer: " + timingToString(keyTimer.timing))
+            // console.log("KeyTimer: " + timingToString(keyTimer.timing))
+            setBackgroundColor(keyTimer.timing.is_on ? "lightgray" : "darkgray")
         })
 
-        document.addEventListener('keydown', (ev: KeyboardEvent) => keyTimer.keydown());
-        document.addEventListener('keyup', (ev: KeyboardEvent) => keyTimer.keyup());
+        document.addEventListener('keydown',
+            (ev: KeyboardEvent) => {if (!ev.repeat) keyTimer.keydown()});
+        document.addEventListener('keyup',
+            (ev: KeyboardEvent) => {if (!ev.repeat) keyTimer.keyup()});
         document.addEventListener('mousedown', (ev: MouseEvent) => keyTimer.keydown());
         document.addEventListener('mouseup', (ev: MouseEvent) => keyTimer.keyup());
-        onblur = keyTimer.keyup
+        onblur = () => keyTimer.keyup()
 
         const recognizer = new Recognizer("ws://127.0.0.1:8765/decode_morse", timingBuffer)
 

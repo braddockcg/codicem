@@ -1,5 +1,6 @@
 import os
 import io
+from typing import Optional
 
 
 def wpm2dit_time(wpm):
@@ -29,17 +30,17 @@ def truncate(seq, n):
     return seq[:-n]
 
 
-morse_lookup = None
-morse_rlookup = None
+morse_lookup: Optional[dict] = None
+morse_rlookup: Optional[dict] = None
 
 
-def morse_table():
+def morse_table() -> dict:
     if morse_lookup is None:
         load_morse_table()
     return morse_lookup
 
 
-def morse_rtable():
+def morse_rtable() -> dict:
     if morse_lookup is None:
         load_morse_table()
     return morse_rlookup
@@ -62,14 +63,12 @@ def load_morse_table(fname=None):
 def char2dashdot(char):
     """Convert a single alphanumeric character to morse
     code in a string with '.', '-', and ' ' (space) symbols"""
-    global morse_lookup
-    return morse_lookup[char]
+    return morse_table()[char]
 
 
 def dashdot2char(dashdot):
     """Convert ".-" to "A", for example """
-    global morse_rlookup
-    return morse_rlookup(dashdot)
+    return morse_rtable()[dashdot]
 
 
 def plaintext2dashdots(plaintext):

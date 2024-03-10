@@ -2,9 +2,13 @@
 
 import os
 import sys
-import morse_gen as mg
-import morsenet
 from keras.callbacks import ModelCheckpoint
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
+import codicem.morse_gen as mg
+from codicem import morsenet
+from codicem.timings_type import load_timings_set
 
 
 def main(args):
@@ -15,13 +19,12 @@ def main(args):
     test_fname = args[2]
     model_fname = args[3]
     epochs = int(args[4])
-    use_cnn = True
 
     # Init morse table
     mg.load_morse_table()
 
     # Configure or Load Model
-    morse_net = morsenet.MorseNet(use_cnn=use_cnn)
+    morse_net = morsenet.MorseNet()
     if os.path.exists(model_fname):
         print("Loading model from " + model_fname)
         morse_net.load(model_fname)
@@ -30,8 +33,8 @@ def main(args):
         morse_net.compile_model()
 
     # Load test and train data
-    train_timings_set, train_strings = mg.load_timings_set(train_fname)
-    test_timings_set, test_strings = mg.load_timings_set(test_fname)
+    train_timings_set, train_strings = load_timings_set(train_fname)
+    test_timings_set, test_strings = load_timings_set(test_fname)
 
     # Train
     checkpointer = ModelCheckpoint(filepath=model_fname, verbose=1)
@@ -41,5 +44,6 @@ def main(args):
     # Save - probably redundant to the checkpointer callback
     print("Saving model to " + model_fname)
     morse_net.save(model_fname)
+
 
 main(sys.argv)

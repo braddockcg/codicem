@@ -1,27 +1,26 @@
 import {action, observable} from 'mobx'
-import {Timing, TimingBuffer} from "./timing";
+import {Timing, TimingBuffer, timingToString} from "./timing";
 
 export class KeyTimer {
 
     @observable accessor timing: Timing = new Timing(false, 0)
     timingBuffer: TimingBuffer | null = null
-    timeout = 250
+    timeout = 1000
 
     private lastEventTime: number = performance.now()
 
     constructor(timeBuffer: TimingBuffer | null = null) {
-        console.log("KeyTimer Constructor")
         this.timingBuffer = timeBuffer
         this.timeoutHandler()
     }
 
     public keydown() {
-        console.log("Keydown")
+        this.update(false)
         this.update(true)
     }
 
     public keyup() {
-        console.log("Keyup")
+        this.update(true)
         this.update(false)
     }
 

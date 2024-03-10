@@ -6,7 +6,7 @@ from .timings_type import parse_timing
 
 async def decode_morse(websocket, path, model_fname: str):
     print("Loading %s" % model_fname)
-    net = morsenet.MorseNet(use_cnn=True)
+    net = morsenet.MorseNet()
     net.load(model_fname)
     print("Loading Completed")
 
@@ -20,10 +20,12 @@ async def decode_morse(websocket, path, model_fname: str):
         # Parse the timing string
         timing = parse_timing(timing_string)
 
+        # Truncate long spaces
+        timing.duration = min(timing.duration, 300.0)
+
         # Is this duration a continuation
         if (len(timings) > 0) and (timing.is_on == timings[-1].is_on):
             timings[-1].duration += timing.duration
-            timings[-1].duration = min(timings[-1].duration, 300)
             continuation = True
         else:
             timings.append(timing)
@@ -33,7 +35,7 @@ async def decode_morse(websocket, path, model_fname: str):
 
         # Run the model to get the output for our timings
         t0 = time()
-        y, wpm = net.predict([timings])
+        y, y_space = net.predict([timings])
         # print("WPM: ", wpm)
 
         # print("TIMINGS:")

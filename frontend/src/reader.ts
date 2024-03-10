@@ -11,6 +11,7 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
     let pending: Timing[] = []
     let nextTime = 0
     let onResultCallback: (timing: Timing) => void
+    let paused = true
 
     const easysocket = new EasySocket(uri);
 
@@ -18,6 +19,9 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
         // console.log("play_next queue size = " + pending.length, " nextTime = " + nextTime, " time = " + audioSubsystem.time())
         if (pending.length == 0 || audioSubsystem.time() < nextTime) {
             setInterval(play_next, 1000 * (nextTime - audioSubsystem.time()))
+            return
+        }
+        if (paused) {
             return
         }
         const timing = pending.shift()
@@ -52,6 +56,15 @@ export const Reader = function(uri: string, filename: string, wpm: number, audio
         console.log("Reader Connection opened");
         easysocket.send(wpm + "\t" + filename)
     }
+
+    const start = function() {
+        paused = false
+    }
+
+    const stop = function() {
+        paused = true
+    }
+
 
     return {
         symbols,

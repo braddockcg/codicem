@@ -13,9 +13,14 @@ export class AudioSubsystem {
         osc.frequency.value = freq;
         osc.type = 'sine';
 
+        const lpf = this.audioContext.createBiquadFilter();
+        lpf.type = "lowpass";
+        lpf.frequency.value = 800;
+        osc.connect(lpf)
+
         const gain = this.audioContext.createGain();
         gain.gain.value = 0;
-        osc.connect(gain);
+        lpf.connect(gain);
         gain.connect(this.audioContext.destination);
 
         const oscillator = new Oscillator(this, osc, gain)
@@ -40,8 +45,10 @@ export class Oscillator {
     }
 
     public setGain(value: number) {
-        this.audioSubsystem.audioContext.resume()
-        this.gain.gain.value = value;
+        // this.audioSubsystem.audioContext.resume()
+        // this.gain.gain.value = value;
+        const timeConstant = 0.030
+        this.gain.gain.setTargetAtTime(value, this.audioSubsystem.time() + timeConstant, timeConstant)
     }
 
     public turnOn() {

@@ -10,7 +10,7 @@ def main():
     parser = argparse.ArgumentParser(description='Morse Code Environment')
     parser.add_argument('--port', type=int, default=8765, help='Port to listen on')
     parser.add_argument('--interface', type=str, default='localhost', help='Interface to listen on')
-    parser.add_argument('--model', type=str, default='2M.keras', help='Model file')
+    parser.add_argument('--model', type=str, default='new.keras', help='Model file')
     args = parser.parse_args()
     print("Port: ", args.port)
 
