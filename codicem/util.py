@@ -1,6 +1,6 @@
 import os
 import io
-from typing import Optional
+from typing import Optional, List
 
 
 def wpm2dit_time(wpm):
@@ -76,3 +76,13 @@ def plaintext2dashdots(plaintext):
     representation like ['.-', '-..', '-.-.']"""
     return [char2dashdot(char) for char in plaintext]
 
+
+def dashdots2string(dashdots: List[str]) -> str:
+    s = ''
+    for dd in dashdots:
+        try:
+            c = dashdot2char(dd)
+        except KeyError as e:
+            c = '~'
+        s += c
+    return s

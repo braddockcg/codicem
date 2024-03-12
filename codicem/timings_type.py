@@ -1,10 +1,12 @@
 import os
 import io
 import random
-from typing import Optional, List
+from copy import copy
+import numpy as np
+from typing import Optional, List, Tuple
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from .util import intersperse, plaintext2dashdots, wpm2dit_time
+from .util import intersperse, plaintext2dashdots, wpm2dit_time, dashdot2char
 
 INCOMPLETE = '~'
 
@@ -15,6 +17,10 @@ SYM_SPACE = 's'  # inter-symbol space
 CHAR_SPACE = 'c'  # inter-character space
 WORD_SPACE = '_'  # An actual space character
 UNKNOWN = '?'  # Unknown symbol type
+
+marks_stypes = [DOT, DASH]
+spaces_stypes = [SYM_SPACE, CHAR_SPACE, WORD_SPACE]
+all_stypes = marks_stypes + spaces_stypes
 
 
 @dataclass
@@ -303,3 +309,45 @@ def restrict_mark_space_times(
         else:
             t.duration = max(min_space, min(max_space, t.duration))
     return timings
+
+
+def timings2dashdots(timings: List[Timing]) -> Tuple[str, List[Timing]]:
+    dd = []
+    sym = ''
+    new_timings = []
+    for t in timings:
+        new_timings.append(copy(t))
+        new_timings[-1].label = '~'
+        if t.stype == DOT:
+            sym += '.'
+        elif t.stype == DASH:
+            sym += '-'
+        elif t.stype == WORD_SPACE:
+            if len(sym) > 0:
+                dd.append(sym)
+                try:
+                    new_timings[-1].label = dashdot2char(sym) + ' '
+                except KeyError as e:
+                    new_timings[-1].label = ' '
+            dd.append(' ')
+        elif t.stype == CHAR_SPACE:
+            dd.append(sym)
+            sym = ''
+        elif t.stype == SYM_SPACE:
+            pass
+        else:
+            raise ValueError(f"Unknown stype {t.stype}")
+
+    return dd, new_timings
+
+
+def separate_durations_by_stype(timings_set: List[List[Timing]]) -> dict:
+    """Return a dictionary of durations for each symbol type
+    in the timings set.
+    """
+    durations = {}
+    for sym in marks_stypes + spaces_stypes:
+        durations[sym] = np.array([t.duration
+                                   for timing in timings_set
+                                   for t in timing if t.stype == sym])
+    return durations
