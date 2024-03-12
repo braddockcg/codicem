@@ -54,7 +54,7 @@ class Timing(object):
             s += "ON "
         else:
             s += "OFF "
-        s += str(self.duration) + ", '" + str(self.label) + "']"
+        s += str(self.duration) + ", '" + self.stype + ', ' + str(self.label) + "']"
         return s
 
     def is_space(self):
