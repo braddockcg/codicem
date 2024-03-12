@@ -121,7 +121,7 @@ def load_timings(f):
         timings.append(t)
 
 
-def load_timings_set(fname):
+def load_timings_set(fname, num_sets=-1):
     with io.open(fname, 'rt') as f:
         timings_set = []
         strings = []
@@ -131,6 +131,8 @@ def load_timings_set(fname):
                 break
             timings_set.append(timings)
             strings.append(string)
+            if num_sets > 0 and len(timings_set) >= num_sets:
+                break
     return timings_set, strings
 
 
@@ -245,7 +247,7 @@ def normalize_marks(timings: List[Timing]) -> List[Timing]:
 
 
 # The average standard mark length for PARIS
-normalize_marks.paris_avg_mark = average_mark_length(plaintext2training("PARIS"))
+normalize_marks.paris_avg_mark = average_mark_length(plaintext2training("PARIS "))
 
 
 def normalize_spaces(timings: List[Timing]) -> List[Timing]:
@@ -262,7 +264,7 @@ def normalize_spaces(timings: List[Timing]) -> List[Timing]:
 
 
 # The average standard mark length for PARIS
-normalize_spaces.paris_avg_space = average_space_length(plaintext2training("PARIS"))
+normalize_spaces.paris_avg_space = average_space_length(plaintext2training("PARIS "))
 
 
 def normalize_timings(timings: List[Timing]) -> List[Timing]:

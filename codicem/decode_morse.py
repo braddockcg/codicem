@@ -1,6 +1,7 @@
 from json import dumps
 from time import time
 from . import morsenet
+from .cwos.messages import RecogResults, pack_message, Recognition
 from .timings_type import parse_timing
 
 
@@ -21,7 +22,7 @@ async def decode_morse(websocket, path, model_fname: str):
         timing = parse_timing(timing_string)
 
         # Truncate long spaces
-        timing.duration = min(timing.duration, 300.0)
+        timing.duration = min(timing.duration, 500.0)
 
         # Is this duration a continuation
         if (len(timings) > 0) and (timing.is_on == timings[-1].is_on):
@@ -31,7 +32,7 @@ async def decode_morse(websocket, path, model_fname: str):
             timings.append(timing)
             continuation = False
         # Truncate the history
-        timings = timings[-48:]
+        timings = timings[-net.num_steps:]
 
         # Run the model to get the output for our timings
         t0 = time()
@@ -41,8 +42,9 @@ async def decode_morse(websocket, path, model_fname: str):
         # print("TIMINGS:")
         # for i, t in enumerate(timings):
         #     print(i, t)
-        # print("RESUlT (%d ms): " % (int(1000 * (time() - t0))), y)
+        print("RESUlT (%d ms): " % (int(1000 * (time() - t0))), y)
 
+        # Send the output to the client
         if continuation:
             if last_output == y[0]:
                 pass
@@ -50,17 +52,23 @@ async def decode_morse(websocket, path, model_fname: str):
                 if last_output != '~' and last_output != '':
                     outputs = outputs[:-len(last_output)]
                 if y[0] != '~':
-                    outputs.append({
-                        'label': y[0],
-                        'tid': timings[-1].tid,
-                    })
+                    outputs.append(Recognition(
+                        label=y[0],
+                        tid=timings[-1].tid,
+                    ))
         else:
             if y[0] != '~':
-                outputs.append({
-                    'label': y[0],
-                    'tid': timings[-1].tid,
-                })
+                outputs.append(Recognition(
+                    label=y[0],
+                    tid=timings[-1].tid,
+                ))
         outputs = outputs[-48:]
         last_output = y[0]
-        await websocket.send(dumps(outputs))
-        # print("> {}".format(outputs))
+
+        norm_timings = net.normalize(timings)
+        msg = RecogResults.from_dict({
+            'recognitions': outputs,
+            'normalized': norm_timings,
+        })
+
+        await websocket.send(pack_message(msg))

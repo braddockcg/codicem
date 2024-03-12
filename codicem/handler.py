@@ -18,6 +18,6 @@ async def handler(websocket, path: str, args):
     elif path == '/hello':
         await hello(websocket, path)
     elif path == '/send_morse_timings':
-        await send_morse_timings(websocket, '/home/braddock/expire/morse/2M-test')
+        await send_morse_timings(websocket, '/home/braddock/expire/morse/new-test')
     else:
         print("Unknown websocket path: ", path)

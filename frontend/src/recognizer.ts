@@ -1,16 +1,20 @@
 import {EasySocket} from "./easy_socket";
 import {Timing, TimingBuffer, timingToString} from "./timing";
 import {autorun} from "mobx";
+import {Envelope, RecogResults} from "./messages";
+
 
 export class Recognizer {
     easysocket: EasySocket
     timingBuffer: TimingBuffer
+    normalizedTimingBuffer: TimingBuffer
     lastDuration: number = -1
     lsatTid: number = -1
 
     constructor(uri: string, timingBuffer: TimingBuffer) {
         console.log("Recognizer Constructor")
         this.timingBuffer = timingBuffer
+        this.normalizedTimingBuffer = new TimingBuffer()
         this.easysocket = new EasySocket(uri);
         this.easysocket.onJSONMessage = this.onMessage.bind(this)
         autorun(() => {
@@ -28,13 +32,15 @@ export class Recognizer {
     }
 
     private onMessage(json: object) {
-        const outputs = json as Timing[]
-        const msg = outputs.slice(-1)[0]
+        const envelope = json as Envelope
+        const msg: RecogResults = envelope.payload as RecogResults
+        const last_recognition = msg.recognitions.slice(-1)[0]
         if (msg === undefined) {
             return
         }
-        // console.log(msg)
-        const t = this.timingBuffer?.getById(msg.tid)
-        if (t) t.setLabel(msg.label)
+        console.log(last_recognition.label)
+        const t = this.timingBuffer?.getById(last_recognition.tid)
+        if (t) t.setLabel(last_recognition.label)
+        this.normalizedTimingBuffer.setTimings(msg.normalized)
     }
 }

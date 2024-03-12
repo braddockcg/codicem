@@ -1,7 +1,8 @@
 // Graphically draw a Morse code signal on a canvas
 // By Braddock Gaskill, March 2024
 
-import {Timing, timingToString} from "./timing";
+import {Timing, TimingBuffer, timingToString} from "./timing";
+import {autorun} from "mobx";
 
 export const create_canvas = function (element: HTMLElement | null) {
     const canvas = document.createElement("canvas");
@@ -51,5 +52,23 @@ export const draw_morse = function(canvas: any, symbols: Timing[]) {
         const d = Math.min(sym.duration, maxDuration)
         draw(t, d, sym.is_on, label, window.innerWidth / total_time)
         t += d
+    }
+}
+
+export class TimingsRenderer {
+    canvas: HTMLCanvasElement
+    timingBuffer: TimingBuffer
+
+    constructor(element: HTMLElement, timingBuffer: TimingBuffer) {
+        this.canvas = create_canvas(element)
+        this.timingBuffer = timingBuffer
+
+        autorun(() => {
+            this.draw()
+        })
+    }
+
+    public draw() {
+        draw_morse(this.canvas, this.timingBuffer.timings)
     }
 }

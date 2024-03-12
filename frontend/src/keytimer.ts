@@ -15,11 +15,13 @@ export class KeyTimer {
     }
 
     public keydown() {
+        console.log("keydown")
         this.update(false)
         this.update(true)
     }
 
     public keyup() {
+        console.log("keyup")
         this.update(true)
         this.update(false)
     }

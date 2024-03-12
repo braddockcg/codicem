@@ -69,6 +69,11 @@ export class TimingBuffer {
     }
 
     @action
+    shift(): Timing {
+        return this.timings.shift()!
+    }
+
+    @action
     removeTiming(timing: Timing) {
         for (const t of this.timings) {
             if (t === timing) {
@@ -80,9 +85,10 @@ export class TimingBuffer {
 
     @action
     setTimings(timings: Timing[]) {
-        this.timings.splice(0)
-        this.timings.concat(timings)
-        this.truncate()
+        this.timings = timings
+        // this.timings.splice(0)
+        // this.timings.concat(timings)
+        // this.truncate()
     }
 
     @computed
@@ -103,5 +109,14 @@ export class TimingBuffer {
 
     getById(tid: number): Timing | undefined {
         return this.timings.filter(t => t.tid === tid)[0]
+    }
+
+    @computed
+    get length(): number {
+        console.log("TimingBuffer: length")
+        if (this.timings) {
+            console.log("TimingBuffer: timings not null")
+        }
+        return this.timings.length
     }
 }

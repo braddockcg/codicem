@@ -1,7 +1,6 @@
 import {AudioSubsystem} from "./audio";
 import {Reader} from "./reader";
-import {create_canvas, draw_morse} from "./draw_morse";
-import {nnmorse} from "./nnmorse";
+import {create_canvas, draw_morse, TimingsRenderer} from "./draw_morse";
 import {Timing, TimingBuffer, timingToString} from "./timing";
 import {autorun} from "mobx";
 import {KeyTimer} from "./keytimer";
@@ -9,8 +8,14 @@ import {Recognizer} from "./recognizer";
 import {setBackgroundColor} from "./util";
 
 export class App {
+    readonly audioSubsystem: AudioSubsystem = new AudioSubsystem()
+    // KeyTimer setup
+    readonly timingBuffer = new TimingBuffer(24)
+    readonly keyTimer: KeyTimer
+
     constructor() {
         console.log("App Constructor")
+        this.keyTimer = new KeyTimer(this.timingBuffer)
     }
 
     public html() {
@@ -20,6 +25,10 @@ export class App {
             <div id="nnmorse_draw"></div>
             <div id="nnmorse_text"></div>
         </div>
+        <div id="normalized">
+            <h2>Normalized</h2>
+            <div id="normalized_draw"></div>
+        </div>
         <div id="reader">
             <h2>Reader</h2>
             <div id="reader_draw"></div>
@@ -28,67 +37,71 @@ export class App {
         `
     }
 
-    public init() {
-        console.log("App init")
-
+    private init_html() {
         const container = document.getElementById('container')
         if (!container) {
             console.log("ERROR: container not found")
             return
         }
         container.innerHTML = this.html()
+    }
 
-        const audioSubsystem = new AudioSubsystem()
-        const nnmorse_canvas = create_canvas(document.getElementById('nnmorse_draw'))
-
-        const reader = Reader("ws://127.0.0.1:8765/send_morse_timings", "2M-test", 0, audioSubsystem)
+    private init_reader() {
+        const reader = new Reader(
+            "ws://127.0.0.1:8765/send_morse_timings",
+            "2M-test",
+            10,
+            this.audioSubsystem
+        )
         const reader_canvas = create_canvas(document.getElementById('reader_draw'))
         autorun(() => {
-            draw_morse(reader_canvas, reader.symbols.timings)
+            draw_morse(reader_canvas, reader.pending.timings)
             const ele = document.getElementById('reader_text')
             if (ele !== null) {
-                ele.innerHTML = reader.symbols.labels
+                ele.innerHTML = reader.pending.labels
             }
         })
+    }
 
-        // KeyTimer setup
-        const timingBuffer = new TimingBuffer(24)
-        const keyTimer = new KeyTimer(timingBuffer)
-
+    init_keytimer() {
         autorun(() => {
             // console.log("KeyTimer: " + timingToString(keyTimer.timing))
-            setBackgroundColor(keyTimer.timing.is_on ? "lightgray" : "darkgray")
+            setBackgroundColor(this.keyTimer.timing.is_on ? "lightgray" : "darkgray")
         })
 
         document.addEventListener('keydown',
-            (ev: KeyboardEvent) => {if (!ev.repeat) keyTimer.keydown()});
+            (ev: KeyboardEvent) => {if (!ev.repeat) this.keyTimer.keydown()});
         document.addEventListener('keyup',
-            (ev: KeyboardEvent) => {if (!ev.repeat) keyTimer.keyup()});
-        document.addEventListener('mousedown', (ev: MouseEvent) => keyTimer.keydown());
-        document.addEventListener('mouseup', (ev: MouseEvent) => keyTimer.keyup());
-        onblur = () => keyTimer.keyup()
-
-        const recognizer = new Recognizer("ws://127.0.0.1:8765/decode_morse", timingBuffer)
-
+            (ev: KeyboardEvent) => {if (!ev.repeat) this.keyTimer.keyup()});
+        document.addEventListener('mousedown', (ev: MouseEvent) => this.keyTimer.keydown());
+        document.addEventListener('mouseup', (ev: MouseEvent) => this.keyTimer.keyup());
+        onblur = () => this.keyTimer.keyup()
+    }
+    
+    init_recog() {
+        const recognizer = new Recognizer("ws://127.0.0.1:8765/decode_morse", this.timingBuffer)
+        const nnmorse_draw_ele = document.getElementById('nnmorse_draw')
+        if (nnmorse_draw_ele) {
+            const recognizerRenderer = new TimingsRenderer(nnmorse_draw_ele, this.timingBuffer)
+        }
+        const norm_draw_ele = document.getElementById('normalized_draw')
+        if (norm_draw_ele) {
+            const normalizedRenderer = new TimingsRenderer(norm_draw_ele, recognizer.normalizedTimingBuffer)
+        } else {
+            console.log("ERROR could not find normalized_draw element")
+        }
         autorun(() => {
-             draw_morse(nnmorse_canvas, timingBuffer.timings)
-             const ele = document.getElementById('nnmorse_text')
-             if (ele !== null) {
-                 ele.innerHTML = timingBuffer.labels
-             }
+            const ele = document.getElementById('nnmorse_text')
+            if (ele !== null) {
+                ele.innerHTML = this.timingBuffer.labels
+            }
         })
+    }
 
-// LCWO Hooks
-        /*
-        window.keydown(down);
-        window.keyup(up);
-        window.mousedown(down);
-        window.mouseup(up);
-        */
-
-// Gamepad support
+    init_gamepad() {
+        // Gamepad support
         window.addEventListener("gamepadconnected", function (e) {
-            var gp = navigator.getGamepads()[0];
+            const gp = navigator.getGamepads()[0];
             if (gp) {
                 console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
                     gp.index, gp.id,
@@ -96,22 +109,39 @@ export class App {
             }
         });
 
-        const gameLoop = function () {
+        const gameLoop = () => {
             if (navigator.getGamepads().length === 0) {
                 return
             }
-            let gamepad = navigator.getGamepads()[0];
+            const gamepad = navigator.getGamepads()[0];
             if (gamepad) {
                 if (gamepad.buttons[0].pressed) {
-                    keyTimer.keydown();
+                    this.keyTimer.keydown();
                 } else {
-                    keyTimer.keyup();
+                    this.keyTimer.keyup();
                 }
             }
             requestAnimationFrame(gameLoop);
         }
         requestAnimationFrame(gameLoop);
+    }
 
+    public init() {
+        console.log("App init")
+        // resume must be called after first user input
+        this.audioSubsystem.audioContext.resume()
 
+        // set up the HTML
+        this.init_html()
+
+        this.init_keytimer()
+
+        // set up the reader
+        // this.init_reader()
+
+        // set up the recognition component
+        this.init_recog()
+
+        this.init_gamepad()
     }
 }
