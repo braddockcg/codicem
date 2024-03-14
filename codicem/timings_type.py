@@ -127,19 +127,21 @@ def load_timings(f):
         timings.append(t)
 
 
+def load_timings_set_from_open_file(f, num_sets=-1):
+    timings_set = []
+    strings = []
+    while num_sets == -1 or len(timings_set) < num_sets:
+        timings, string = load_timings(f)
+        if timings is None:
+            break
+        timings_set.append(timings)
+        strings.append(string)
+    return timings_set, strings
+
+
 def load_timings_set(fname, num_sets=-1):
     with io.open(fname, 'rt') as f:
-        timings_set = []
-        strings = []
-        while True:
-            timings, string = load_timings(f)
-            if timings is None:
-                break
-            timings_set.append(timings)
-            strings.append(string)
-            if num_sets > 0 and len(timings_set) >= num_sets:
-                break
-    return timings_set, strings
+        return load_timings_set_from_open_file(f, num_sets)
 
 
 def dashdotchar2timing(dashdotchar, label=None):
@@ -311,6 +313,25 @@ def restrict_mark_space_times(
     return timings
 
 
+def normalize(
+        timings: List[Timing],
+        num_steps: int,
+        min_mark: float,
+        max_mark: float,
+        min_space: float,
+        max_space: float,
+) -> List[Timing]:
+    """Normalize the timings to a standard duration within limits"""
+    timings = timings[-num_steps:]
+    timings = normalize_timings(timings)
+    timings = restrict_mark_space_times(
+        timings, min_mark, max_mark, min_space, max_space
+    )
+    # We normalize again with the outliers reduced
+    timings = normalize_timings(timings)
+    return timings
+
+
 def timings2dashdots(timings: List[Timing]) -> Tuple[str, List[Timing]]:
     dd = []
     sym = ''
@@ -331,7 +352,12 @@ def timings2dashdots(timings: List[Timing]) -> Tuple[str, List[Timing]]:
                     new_timings[-1].label = ' '
             dd.append(' ')
         elif t.stype == CHAR_SPACE:
-            dd.append(sym)
+            if len(sym) > 0:
+                dd.append(sym)
+                try:
+                    new_timings[-1].label = dashdot2char(sym)
+                except KeyError as e:
+                    pass
             sym = ''
         elif t.stype == SYM_SPACE:
             pass

@@ -1,14 +1,10 @@
-from sklearn.ensemble import RandomForestClassifier
 import numpy as np
-import joblib
 from typing import List, Tuple
 from copy import copy, deepcopy
 import matplotlib.pyplot as plt
-import sys
 
 from codicem.timings_type import *
 from codicem.util import *
-from codicem.morsenet import MorseNet
 
 
 # These lookup tables map the string representation of a symbol type to an integer and vice versa

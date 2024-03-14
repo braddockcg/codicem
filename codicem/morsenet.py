@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 from keras.models import Model, load_model
 from keras.layers import Dense, Input, Conv1D, Flatten
-from keras.src.layers import Concatenate
+from keras.src.layers import Concatenate, Dropout
 
 from .timings_type import Timing
 from . import timings_type
@@ -18,7 +18,7 @@ class MorseNet(object):
             max_mark: float = 6.0,
             min_space: float = 0.1,
             max_space: float = 6.0,
-            num_hidden=128,
+            num_hidden=1024,
             num_steps=24,
     ):
         # Input Layer
@@ -44,13 +44,9 @@ class MorseNet(object):
 
     def normalize(self, timings: List[Timing]) -> List[Timing]:
         """Normalize the timings to a standard duration within limits"""
-        timings = timings[-self.num_steps:]
-        timings = timings_type.normalize_timings(timings)
-        timings = timings_type.restrict_mark_space_times(
-            timings, self.min_mark, self.max_mark, self.min_space, self.max_space
+        timings = timings_type.normalize(
+            timings, self.num_steps, self.min_mark, self.max_mark, self.min_space, self.max_space
         )
-        # We normalize again with the outliers removed
-        timings = timings_type.normalize_timings(timings)
         return timings
 
     def char2output(self, c):
@@ -59,7 +55,7 @@ class MorseNet(object):
     def output2char(self, idx):
         return self.alphabet[idx]
 
-    def timings2cnn(self, timings):
+    def timings2cnn(self, timings) -> np.ndarray:
         timings = self.normalize(timings)
         padded_timings = util.pad_left(timings, self.num_steps,
                                        Timing(False, 0, UNKNOWN, '~', 0.0))
@@ -73,12 +69,12 @@ class MorseNet(object):
         v = np.reshape(v, (-1, 1))
         return v
 
-    def timings2label(self, timings):
+    def timings2label(self, timings) -> str:
         """We train to the last character of the string, thus the
         label of the last Timing in the sequence"""
         return timings[-1].label
 
-    def timings2label_encoding(self, timings):
+    def timings2label_encoding(self, timings) -> (np.ndarray, np.ndarray):
         """Convert the plaintext label of the last character in a
         sequence of Timing duration objects into a neural network output
         vector.  Also encode if the last OFF timing was a space as a
@@ -96,7 +92,7 @@ class MorseNet(object):
             v_space = np.array([1, 0], dtype=bool)
         return v, v_space
 
-    def timings_set2batch(self, timings_set):
+    def timings_set2batch(self, timings_set) -> (np.ndarray, np.ndarray, np.ndarray):
         """A "timings_set" is a list of sequences of Timing duration objects.
         It is optionally labeled.  An input matrix appropriate as a batch
         input for the neural network is returned, along with batch labels
@@ -110,7 +106,7 @@ class MorseNet(object):
         labels_space = np.stack(space_labels)
         return v, labels, labels_space
 
-    def compile_model(self):
+    def compile_model(self) -> Model:
         """Create a CNN-based model.
         This is an alternative to the LSTM technique.
         It takes a 1-D vector of floats between 1.0 and -1.0.
@@ -127,17 +123,20 @@ class MorseNet(object):
         # and positive for key-on - this convolution can learn
         # these semantics and break them into separate dimensions.
         cnn1 = Conv1D(16, 1, activation='relu', use_bias=True)(input_layer)
-        cnn2 = Conv1D(16, 3, activation='relu', use_bias=True)(input_layer)
+        cnn2 = Conv1D(16, 8, activation='relu', use_bias=True)(input_layer)
         concat = Concatenate(axis=1)([cnn1, cnn2])
         # pool1 = MaxPooling1D(2)(cnn2)
         flatten = Flatten()(concat)
-        hidden_layer = Dense(self.num_hidden, activation='relu',
-                             name='hidden')(flatten)
-
+        hidden_layer1 = Dense(self.num_hidden, activation='relu',
+                             name='hidden1')(flatten)
+        dropout1 = Dropout(0.2)(hidden_layer1)
+        hidden_layer2 = Dense(self.num_hidden, activation='relu',
+                              name='hidden2')(dropout1)
+        dropout2 = Dropout(0.2)(hidden_layer2)
         char_output = Dense(self.num_outputs, activation='softmax',
-                            name='char_output')(hidden_layer)
+                            name='char_output')(dropout2)
         space_output = Dense(2, activation='softmax',
-                             name='space_output')(hidden_layer)
+                             name='space_output')(dropout2)
 
         self.model = Model(inputs=[input_layer],
                            outputs=[char_output, space_output])
@@ -150,12 +149,12 @@ class MorseNet(object):
 
         return self.model
 
-    def predict_raw(self, input_data):
+    def predict_raw(self, input_data: np.ndarray) -> (np.ndarray, np.ndarray):
         y, y_space = self.model.predict(input_data)
         return y, y_space
 
     def fit(self, train_timings_set, test_timings_set,
-            batch_size=640, epochs=30, callbacks=None):
+            batch_size=640, epochs=30, callbacks=None) -> None:
         # Convert Timing duration sets to Neural network vectors/matrices
         batch, labels, space_labels = self.timings_set2batch(train_timings_set)
         test_batch, test_labels, test_space_labels = self.timings_set2batch(
@@ -168,7 +167,7 @@ class MorseNet(object):
                                         [test_labels, test_space_labels]),
                        callbacks=callbacks)
 
-    def predict(self, input_timings_set):
+    def predict(self, input_timings_set) -> (List[str], List[bool]):
         # Normalize the timings to a standard duration within limits
         input_batch, input_labels, input_space_labels = self.timings_set2batch(
             input_timings_set)
@@ -182,8 +181,8 @@ class MorseNet(object):
             y_output.append(s)
         return y_output, y_is_space
 
-    def save(self, fname):
+    def save(self, fname) -> None:
         self.model.save(fname)
 
-    def load(self, fname):
+    def load(self, fname) -> None:
         self.model = load_model(fname)

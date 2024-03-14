@@ -86,3 +86,23 @@ def dashdots2string(dashdots: List[str]) -> str:
             c = '~'
         s += c
     return s
+
+
+DICTIONARY_FILENAME = '/usr/share/dict/words'
+word_dictionary: Optional[List[str]] = None
+
+
+def load_word_dictionary(fname: str = DICTIONARY_FILENAME) -> List[str]:
+    """Loads the standard Unix word dictionary"""
+    with io.open(fname, 'rt') as f:
+        words = f.readlines()
+    words = [x.rstrip('\n') for x in words]
+    return words
+
+
+def get_word_dictionary() -> List[str]:
+    """Gets the standard Unix word dictionary, loading it if necessary."""
+    global word_dictionary
+    if word_dictionary is None:
+        word_dictionary = load_word_dictionary()
+    return word_dictionary

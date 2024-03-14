@@ -12,6 +12,19 @@ def random_string(length, alphabet=None):
     return ''.join(list_of_letters)
 
 
+def random_string_from_dictionary(length):
+    words = get_word_dictionary()
+    word1 = random.choice(words).upper()
+    word2 = random.choice(words).upper()
+    word1 = ''.join([c for c in word1 if c in morse_table()])
+    word2 = ''.join([c for c in word2 if c in morse_table()])
+    s = word1 + ' ' + word2
+    if len(s) <= length:
+        return s + ' ' * (length - len(s))
+    start = random.randint(0, len(s) - length)
+    return s[start:start + length]
+
+
 def random_truncate(seq, n):
     n = random.randint(0, n)
     return truncate(seq, n)
@@ -101,11 +114,14 @@ def generate_random_dataset(
         min_sym_space = 0.1,
         max_word_space = 6.0,
         rnd_truncate = 2,
+        use_dictionary = True,
 ) -> (List[str], List[List[Timing]]):
     """Generate a random dataset"""
 
+    random_string_func = random_string_from_dictionary if use_dictionary else random_string
+
     # Generate random strings
-    strings = [random_string(string_len) for _ in range(n)]
+    strings = [random_string_func(string_len) for _ in range(n)]
 
     # Convert the strings to timings
     timings_set = [plaintext2training(x) for x in strings]
