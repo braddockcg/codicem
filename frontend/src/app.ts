@@ -7,6 +7,7 @@ import {KeyTimer} from "./keytimer";
 import {Recognizer} from "./recognizer";
 import {setBackgroundColor} from "./util";
 import * as lcwo from './lcwo';
+import {EasySocketParams} from "./easy_socket";
 
 export class App {
     readonly audioSubsystem: AudioSubsystem = new AudioSubsystem()
@@ -48,8 +49,12 @@ export class App {
     }
 
     private init_reader() {
+        const reader_uri = {
+            port: 8765,
+            path: "/send_morse_timings",
+        }
         const reader = new Reader(
-            "ws://127.0.0.1:8765/send_morse_timings",
+            reader_uri,
             "2M-test",
             10,
             this.audioSubsystem
@@ -80,7 +85,11 @@ export class App {
     }
     
     init_recog() {
-        const recognizer = new Recognizer("ws://127.0.0.1:8765/decode_morse", this.timingBuffer)
+        const recog_uri: EasySocketParams = {
+            port: 8765,
+            path: "/decode_morse",
+        }
+        const recognizer = new Recognizer(recog_uri, this.timingBuffer)
         const nnmorse_draw_ele = document.getElementById('nnmorse_draw')
         if (nnmorse_draw_ele) {
             const recognizerRenderer = new TimingsRenderer(nnmorse_draw_ele, this.timingBuffer)

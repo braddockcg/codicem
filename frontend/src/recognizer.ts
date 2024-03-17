@@ -1,4 +1,4 @@
-import {EasySocket} from "./easy_socket";
+import {EasySocket, EasySocketParams} from "./easy_socket";
 import {Timing, TimingBuffer, timingToString} from "./timing";
 import {autorun} from "mobx";
 import {Envelope, RecogResults} from "./messages";
@@ -11,7 +11,7 @@ export class Recognizer {
     lastDuration: number = -1
     lsatTid: number = -1
 
-    constructor(uri: string, timingBuffer: TimingBuffer) {
+    constructor(uri: EasySocketParams, timingBuffer: TimingBuffer) {
         console.log("Recognizer Constructor")
         this.timingBuffer = timingBuffer
         this.normalizedTimingBuffer = new TimingBuffer()

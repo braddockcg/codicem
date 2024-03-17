@@ -1,3 +1,11 @@
+export interface EasySocketParams {
+    protocol?: string
+    host?: string
+    port: number
+    path?: string
+}
+
+
 export class EasySocket {
     uri: string
     ws: WebSocket | null = null
@@ -11,13 +19,22 @@ export class EasySocket {
     onJSONMessage: ((message: object | object[]) => void) | undefined
     onTextMessage: ((message: string) => void) | undefined
 
-    constructor(uri: string) {
-        this.uri = uri
+    /* If just a number is passed as uri, then it is assumed to be a port number
+    * and the host will be the same host as the web server location the page
+    * was loaded from.  Otherwise uri should be a well formed ws:// or wss:// uri */
+    constructor(p: EasySocketParams) {
+        p.protocol = p.protocol ?? (location.protocol === 'https:' ? 'wss:' : 'ws:');
+        p.host = p.host ?? location.hostname;
+        if (p.port === undefined) {
+            throw new Error("port must be defined")
+        }
+        this.uri = `${p.protocol}//${p.host}:${p.port}${p.path}`
         this.init()
         this.periodicHandler()
     }
 
     private init() {
+        console.log("EasySocket init: ", this.uri)
         this.ws = new WebSocket(this.uri)
         this.ws.onmessage = this.messageHandler.bind(this)
         this.ws.onclose = this.closeHandler.bind(this)

@@ -2,7 +2,7 @@
 
 import {Timing, TimingBuffer} from "./timing";
 import {AudioSubsystem} from "./audio";
-import {EasySocket} from "./easy_socket";
+import {EasySocket, EasySocketParams} from "./easy_socket";
 import {autorun} from "mobx";
 import {TimingsSounder} from "./timings_sounder";
 
@@ -15,7 +15,7 @@ export class Reader {
     readonly wpm: number
     readonly filename: string
 
-    constructor(uri: string, filename: string, wpm: number, audioSubsystem: AudioSubsystem, frequency: number = 300) {
+    constructor(uri: EasySocketParams, filename: string, wpm: number, audioSubsystem: AudioSubsystem, frequency: number = 300) {
         this.wpm = wpm
         this.filename = filename
         this.timingsSounder = new TimingsSounder(this.pending, audioSubsystem, frequency)
