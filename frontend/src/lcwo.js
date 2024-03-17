@@ -1,3 +1,5 @@
+/* This is the morse code decoder from lcwo.net */
+
 var time;
 var temp;
 var lastchar = "";
@@ -30,7 +32,7 @@ code['-.-.-'] = "<u>CT</u>"; code['.--.-.'] = "@";
 code['-..-.'] = "/";
 code['--..--'] = ",";
 
-window.setInterval("checkspace();", 5*dotlength);
+window.setInterval(checkspace, 5*dotlength);
 
 
 function down () {
@@ -61,6 +63,7 @@ function up () {
 }
 
 function checkspace () {
+    console.log("checkspace")
     if (keydown) { return; }
     var mytime = new Date().getTime();
     var diff = mytime-idletime;
@@ -90,6 +93,7 @@ function checkspace () {
 }
 
 function append(what, where) {
+    console.log("append", what, where);
     document.getElementById(where).innerHTML += what;
 }
 

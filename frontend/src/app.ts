@@ -6,6 +6,7 @@ import {autorun} from "mobx";
 import {KeyTimer} from "./keytimer";
 import {Recognizer} from "./recognizer";
 import {setBackgroundColor} from "./util";
+import * as lcwo from './lcwo';
 
 export class App {
     readonly audioSubsystem: AudioSubsystem = new AudioSubsystem()
@@ -126,6 +127,20 @@ export class App {
         requestAnimationFrame(gameLoop);
     }
 
+    /* This is for the morse code decoder from lcwo.net.
+    * It adds text to the HTML id element 'jskey' and 'speed' */
+    init_lcwo() {
+        document.addEventListener('keydown',
+            lcwo.down);
+        document.addEventListener('keyup',
+            lcwo.up);
+        document.addEventListener('mousedown',
+            lcwo.down);
+        document.addEventListener('mouseup',
+            lcwo.up);
+        onblur = lcwo.up
+    }
+
     public init() {
         console.log("App init")
         // resume must be called after first user input
@@ -143,5 +158,7 @@ export class App {
         this.init_recog()
 
         this.init_gamepad()
+
+        this.init_lcwo() // optional for comparison with lcwo.net
     }
 }

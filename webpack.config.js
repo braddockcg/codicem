@@ -26,6 +26,6 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './index.html', // Specify the path to your HTML template file
             filename: 'index.html' // Specify the name of the output HTML file
-        })
+        }),
     ]
 };
