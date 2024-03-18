@@ -83,6 +83,9 @@ cd codicem/
 npx webpack
 ```
 
+Alternatively you can use `codicem/Makefile`.
+
+
 ### Websocket Server
 
 The heart of the Codicem framework uses WebSockets.  
@@ -161,8 +164,21 @@ The modification is documented in photographs located in `codicem/pictures`.
 up with manual keying, and recognition lags.  It does not seem to be
 normalize() (see `notebooks/speed_optimization.ipynb`)
 
+- If the browser is in the middle of a mark (key on), then there is no point
+  sending the Timings to the decoder until the start of a space (key off)
+  because the recognizer only recognizes a symbol on a space.  This would cut the
+  number of recognition calls in half.
+
+- If the recognizer returns a word space, and the browser is still in a key off
+  state, then there is no point sending more Timings to the recognizer because
+  the result should always be a (longer) word space.
+
 - LCWO's heuristic recognizer has been included for reference in
   `frontend/src/lcwo.js`, but I have not been able to get it to function.
 
+- For decoder comparison or training purposes, look at
+  https://gitlab.com/scphillips/morse-pro
+  Note that morse-pro does not seem to differentiate between character spaces
+  and word spaces, which makes the problem much easier.
 
 --- 
