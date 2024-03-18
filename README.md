@@ -27,6 +27,7 @@ Components include:
 The machine learning recognizer is a TensorFlow CNN with about a million
 parameters.
 
+
 ### Generated Training Data
 
 A training dataset is generated randomly.  We are currently optimizing this for
@@ -111,6 +112,29 @@ The are currently two WebSocket services:
   decode on and off timings from the Morse code keyer on the frontend.
 
 - `/send_morse_timings` plays back a file of Morse code timings from the server.
+
+
+## Frontend
+
+The Codicem frontend is written in TypeScript and runs in a web browser - even
+a phone's browser.  It communicates to the backend using WebSockets.  The
+source is in `codicem/frontend/src`.
+
+
+## Bluetooth Telegraph Key
+
+The Bluetooth telegraph key is a straight key connected to a Bluetooth mouse.
+The key wires are soldered to the mouse's left button switch.  A notch was
+filed into the plastic side of the mouse, and one of the support posts inside
+the mouse had to be filed down to fit the wires.  
+
+The wires used were a bit thick, and when the mouse was reassembled top casing
+was not flush and the plastic left button of the mouse did not reach the
+switch, but the key worked perfectly.
+
+The mouse used was a Logitech Pebble i345.
+
+The modification is documented in photographs located in `codicem/pictures`.
 
 
 ## Future Work and Known Issues
