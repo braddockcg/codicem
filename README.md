@@ -78,8 +78,19 @@ files in `codicem/frontend/src` are modified.  This uses the IDEA WebPack plugin
 
 ### Websocket Server
 
-The heart of the Codicem framework uses WebSockets.  The Codicem WebSockets
-service can be launched as follows:
+The heart of the Codicem framework uses WebSockets.  
+
+To use the Codicem python code, you must run poetry to create and install a
+virtual environment, then then launch a shell using that environment:
+
+```bash
+pip install poetry
+cd codicem/
+poetry install
+poetry shell
+```
+
+The Codicem WebSockets service can be launched as follows:
 
 ```bash
 cd codicem/
@@ -96,12 +107,32 @@ want to make external connections to the service from other devices.
 
 The are currently two WebSocket services:
 
-- `/decode_morse` accesses the TensorFlow machine learning model to attempt to
+- `/decode_morse` runs the TensorFlow machine learning model to attempt to
   decode on and off timings from the Morse code keyer on the frontend.
 
 - `/send_morse_timings` plays back a file of Morse code timings from the server.
 
 
+## Future Work and Known Issues
+
+- The TensorFlow recognizer is not very good.
+
+- The TensorFlow reocgnizer has a hard time with spaces.  Spaces input manually
+  are very different than those generated in the random dataset.
+
+- A public website for entering manually keyed morse code would be valuable for
+  obtaining real training data.
+
+- A proper application framework needs to be designed and built.
+
+- The decode\_morse recognizer is very slow.  On the GPU Tensorflow reports
+  only 14 ms/step, but overall timing of the model.predict call results in
+60-70 ms total.  This code needs to be profiled and optimized.  It cannot keep
+up with manual keying, and recognition lags.  It does not seem to be
+normalize() (see `notebooks/speed_optimization.ipynb`)
+
+- LCWO's heuristic recognizer has been included for reference in
+  `frontend/src/lcwo.js`, but I have not been able to get it to function.
 
 
 --- 
