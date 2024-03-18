@@ -76,6 +76,12 @@ The `codicem-bunder.js` is configured in the `codicem/webpack.config.js`.  We
 use IntelliJ IDEA to build the bundle automatically when any of the TypeScript
 files in `codicem/frontend/src` are modified.  This uses the IDEA WebPack plugin.
 
+The bundle can be built manually on the command line using npx:
+
+```bash
+cd codicem/
+npx webpack
+```
 
 ### Websocket Server
 
