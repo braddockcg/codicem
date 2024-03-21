@@ -129,6 +129,19 @@ The Codicem frontend is written in TypeScript and runs in a web browser - even
 a phone's browser.  It communicates to the backend using WebSockets.  The
 source is in `codicem/frontend/src`.
 
+Usually WebPack is used for the compilation and bundling of the frontend into `frontend/dist/codicem-bundle.js`. 
+
+IntelliJ IDEA can also be configured to do the compilation, either with WebPack
+(as described above), or using the TypeScript compiler `tsc`, or both.  The
+`tsc` compiler is configured in `tsconfig.jscon` to compile the source files
+into javascript located in `frontend/build`. 
+
+You can use tsc to build the source files into `frontend/build/` with:
+```bash
+cd codicem/
+npx tsc
+``` 
+
 
 ## Bluetooth Telegraph Key
 
