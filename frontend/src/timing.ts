@@ -40,6 +40,11 @@ export const timingToString = function(timing: Timing) {
         + "\t" + (timing.tid === undefined ? "-1" : timing.tid)
 }
 
+export const stringToTiming = function(s: string): Timing {
+    const parts = s.split("\t")
+    return new Timing(parts[0] === "ON", parseFloat(parts[1]), parts[2], parts[3], parseFloat(parts[4]), parseInt(parts[5]))
+}
+
 export const timingFromJson = function(json: any) {
     const s = JSON.parse(json)
     return new Timing(s.is_on, s.duration, s.stype, s.label, s.wpm, s.tid)
