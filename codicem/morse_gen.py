@@ -1,3 +1,4 @@
+from .dashdots import normalize_timings, plaintext2training, scale_timings
 from .timings_type import *
 from .util import *
 
@@ -8,7 +9,7 @@ def random_string(length, alphabet=None):
         letters.extend([' '] * 5)  # Add more spaces
     else:
         letters = list(alphabet)
-    list_of_letters = [random.choice(letters) for x in range(length)]
+    list_of_letters = [random.choice(letters) for _ in range(length)]
     return ''.join(list_of_letters)
 
 
@@ -62,7 +63,7 @@ def old_generate_random_dataset(
         random_factor=0.2, rnd_truncate=0,
         lengthen_char_spaces=0.0, lengthen_word_spaces=0.0):
     """Generate a random dataset"""
-    strings = [random_string(string_len, letters) for x in range(n)]
+    strings = [random_string(string_len, letters) for _ in range(n)]
     timings_set = [plaintext2training(x) for x in strings]
 
     # Randomly adjust the send rate in words per minute
@@ -109,12 +110,12 @@ def randomize_symbols(
 def generate_random_dataset(
         n,
         string_len,
-        min_dit = 0.1,
-        max_dash = 6.0,
-        min_sym_space = 0.1,
-        max_word_space = 6.0,
-        rnd_truncate = 2,
-        use_dictionary = True,
+        min_dit=0.1,
+        max_dash=6.0,
+        min_sym_space=0.1,
+        max_word_space=6.0,
+        rnd_truncate=2,
+        use_dictionary=True,
 ) -> (List[str], List[List[Timing]]):
     """Generate a random dataset"""
 

@@ -1,6 +1,7 @@
 {
   "module": "esnext",
   "dependencies": {
+    "ebnf": "^1.9.1",
     "mobx": "^6.12.0",
     "webpack": "^5.90.3"
   },

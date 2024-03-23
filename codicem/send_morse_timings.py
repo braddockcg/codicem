@@ -1,6 +1,8 @@
 import asyncio
 from json import dumps, loads
-from .timings_type import load_timings, scale_timings
+
+from .dashdots import scale_timings
+from .timings_type import load_timings
 
 
 async def send_morse_timings(websocket, filename):

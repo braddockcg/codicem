@@ -1,8 +1,8 @@
 import numpy as np
-from typing import List, Tuple
-from copy import copy, deepcopy
+from copy import deepcopy
 import matplotlib.pyplot as plt
 
+from codicem.dashdots import timings2dashdots
 from codicem.timings_type import *
 from codicem.util import *
 

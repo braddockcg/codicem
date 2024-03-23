@@ -5,10 +5,9 @@ from keras.models import Model, load_model
 from keras.layers import Dense, Input, Conv1D, Flatten
 from keras.src.layers import Concatenate, Dropout
 
-from .timings_type import Timing
-from . import timings_type
 from . import util
-from .timings_type import UNKNOWN
+from .timings_type import UNKNOWN, INCOMPLETE, Timing
+from . import dashdots
 
 
 class MorseNet(object):
@@ -31,7 +30,7 @@ class MorseNet(object):
         self.num_hidden = num_hidden
 
         # Output Layer
-        self.alphabet = sorted(util.morse_table().keys()) + [timings_type.INCOMPLETE]
+        self.alphabet = sorted(util.morse_table().keys()) + [INCOMPLETE]
         self.num_outputs = len(self.alphabet)
 
         # Timing parameters
@@ -44,7 +43,7 @@ class MorseNet(object):
 
     def normalize(self, timings: List[Timing]) -> List[Timing]:
         """Normalize the timings to a standard duration within limits"""
-        timings = timings_type.normalize(
+        timings = dashdots.normalize(
             timings, self.num_steps, self.min_mark, self.max_mark, self.min_space, self.max_space
         )
         return timings
@@ -83,7 +82,7 @@ class MorseNet(object):
         # some labels may be multiple characters, such as spaces ex. "A "
         label = self.timings2label(timings)
         if label is None:
-            label = timings_type.INCOMPLETE
+            label = INCOMPLETE
         idx = self.char2output(label[0])
         v[idx] = True
         if len(label) > 1 and label[1] == ' ':
@@ -128,7 +127,7 @@ class MorseNet(object):
         # pool1 = MaxPooling1D(2)(cnn2)
         flatten = Flatten()(concat)
         hidden_layer1 = Dense(self.num_hidden, activation='relu',
-                             name='hidden1')(flatten)
+                              name='hidden1')(flatten)
         dropout1 = Dropout(0.2)(hidden_layer1)
         hidden_layer2 = Dense(self.num_hidden, activation='relu',
                               name='hidden2')(dropout1)

@@ -1,4 +1,3 @@
-from json import dumps
 from time import time
 from . import morsenet
 from .cwos.messages import RecogResults, pack_message, Recognition

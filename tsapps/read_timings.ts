@@ -2,6 +2,11 @@ import {Timing, stringToTiming, timingToString} from '@codicem/timing'
 import * as readline from "readline";
 import * as fs from "fs";
 
+export function timingsLabel(timings: Timing[]) : string {
+    const labels = timings.filter(e => (e.label !== '~')).map(t => t.label)
+    return labels.join('')
+}
+
 export async function* readLinesFromFile(filePath: string): AsyncGenerator<string> {
     const fileStream = fs.createReadStream(filePath);
     const rl = readline.createInterface({
