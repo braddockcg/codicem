@@ -2,7 +2,7 @@ from copy import copy
 import numpy as np
 
 from .util import intersperse, plaintext2dashdots, wpm2dit_time, dashdot2char
-from timings_type import *
+from .timings_type import *
 
 
 def dashdotchar2timing(dashdotchar, label=None):
@@ -239,3 +239,50 @@ def separate_durations_by_stype(timings_set: List[List[Timing]]) -> dict:
                                    for timing in timings_set
                                    for t in timing if t.stype == sym])
     return durations
+
+
+def string2timings(text: str, wpm: float, fwpm: float) -> List[Timing]:
+    """
+    Convert a string to a list of Morse Code Timing objects
+    :param text: the string to convert
+    :param wpm: words per minute
+    :param fwpm: fansworth words per minute, used for characters and intra-character spaces
+    :return:
+    """
+    fdit_time = wpm2dit_time(fwpm)
+    dit_time = wpm2dit_time(wpm)
+    dd = plaintext2dashdots(text)
+    timings = []
+    for char in dd:
+        for mark_or_space in char:
+            if mark_or_space == '.':
+                timings.append(Timing(True, fdit_time, DOT, wpm=fwpm))
+                timings.append(Timing(False, fdit_time, SYM_SPACE, wpm=fwpm))
+            elif mark_or_space == '-':
+                timings.append(Timing(True, 3 * fdit_time, DASH, wpm=fwpm))
+                timings.append(Timing(False, fdit_time, SYM_SPACE, wpm=fwpm))
+            elif mark_or_space == ' ':
+                timings.append(Timing(False, 7 * dit_time, WORD_SPACE, wpm=wpm))
+            else:
+                raise Exception(f"Expected ., -, or space but got {mark_or_space}")
+        if timings[-1].stype == SYM_SPACE:
+            timings = timings[:-1]
+        if char != ' ':
+            timings.append(Timing(False, 3 * dit_time, CHAR_SPACE, wpm=wpm))
+    # Remove trailing char or sym spaces
+    while len(timings) > 0 and timings[-1].stype in [SYM_SPACE, CHAR_SPACE]:
+        timings = timings[:-1]
+    # Remove leading char or sym spaces
+    while len(timings) > 0 and timings[0].stype in [SYM_SPACE, CHAR_SPACE]:
+        timings = timings[1:]
+    # Now remove extra spaces
+    timings2 = []
+    for i, timing in enumerate(timings):
+        if timing.stype not in [SYM_SPACE, CHAR_SPACE]:
+            timings2.append(timing)
+        else:
+            word_space_before = i > 0 and timings[i - 1].stype == WORD_SPACE
+            word_space_after = i < len(timings) - 1 and timings[i + 1].stype == WORD_SPACE
+            if (not word_space_before) and (not word_space_after):
+                timings2.append(timing)
+    return timings2

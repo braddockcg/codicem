@@ -56,7 +56,7 @@ class Timing(object):
             s += "ON "
         else:
             s += "OFF "
-        s += str(self.duration) + ", '" + self.stype + ', ' + str(self.label) + "']"
+        s += str(self.duration) + ", " + self.stype + ', ' + str(self.label) + ', ' + str(self.wpm) + "']"
         return s
 
     def is_space(self):
@@ -64,6 +64,9 @@ class Timing(object):
 
     def is_interchar_space(self):
         return self.stype == CHAR_SPACE
+
+    def is_any_space(self):
+        return self.stype in spaces_stypes
 
 
 def copy_timing(timing: Timing) -> Timing:
