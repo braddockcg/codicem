@@ -1,4 +1,6 @@
-from .dashdots import normalize_timings, plaintext2training, scale_timings
+from random import uniform, gauss
+
+from .dashdots import normalize_timings, plaintext2training, scale_timings, string2timings
 from .timings_type import *
 from .util import *
 
@@ -144,5 +146,64 @@ def generate_random_dataset(
 
     # Normalize the timings
     timings_set = [normalize_timings(timings) for timings in timings_set]
+
+    return strings, timings_set
+
+
+def gaussian_permute(
+        timings: List[Timing],
+        mark_stddev=0.0,
+        word_space_stddev=0.0,
+        char_space_stddev=0.0,
+        sym_space_stddev=0.0,
+) -> None:
+    """Performs a gaussian randomization of Timing durations in place"""
+    for timing in timings:
+        if timing.stype in marks_stypes:
+            timing.duration *= gauss(1.0, mark_stddev)
+        elif timing.stype == WORD_SPACE:
+            timing.duration *= gauss(1.0, word_space_stddev)
+        elif timing.stype == CHAR_SPACE:
+            timing.duration *= gauss(1.0, char_space_stddev)
+        elif timing.stype == SYM_SPACE:
+            timing.duration *= gauss(1.0, sym_space_stddev)
+
+
+def generate_gaussian_dataset(
+        n,
+        string_len,
+        min_wpm=5,
+        max_wpm=35,
+        farnsworth_max_multiplier=4,
+        mark_stddev=0.0,
+        word_space_stddev=0.0,
+        char_space_stddev=0.0,
+        sym_space_stddev=0.0,
+        rnd_truncate=2,
+        use_dictionary=True,
+) -> Tuple[List[str], List[List[Timing]]]:
+    random_string_func = random_string_from_dictionary if use_dictionary else random_string
+
+    # Generate random strings
+    strings = [random_string_func(string_len) for _ in range(n)]
+
+    # Convert the strings to timings
+    timings_set = []
+    for text in strings:
+        wpm = uniform(min_wpm, max_wpm)
+        fwpm = wpm * uniform(1, farnsworth_max_multiplier)
+        timings_set.append(string2timings(text, wpm, fwpm))
+
+    # Randomly truncate the timings
+    timings_set = [random_truncate(timings, rnd_truncate) for timings in timings_set]
+
+    for timings in timings_set:
+        gaussian_permute(
+            timings,
+            mark_stddev,
+            word_space_stddev,
+            char_space_stddev,
+            sym_space_stddev,
+        )
 
     return strings, timings_set

@@ -21,7 +21,15 @@ def main(args):
 
     for i in range(n):
         # Generate random dataset
-        strings, timings_set = mg.generate_random_dataset(1, string_len)
+        # strings, timings_set = mg.generate_random_dataset(1, string_len)
+        strings, timings_set = mg.generate_gaussian_dataset(
+            1,
+            string_len,
+            mark_stddev=0.2,
+            word_space_stddev=0.2,
+            char_space_stddev=0.2,
+            sym_space_stddev=0.2,
+        )
 
         # Write dataset to stdout
         for string, timings in zip(strings, timings_set):

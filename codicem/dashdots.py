@@ -253,22 +253,25 @@ def string2timings(text: str, wpm: float, fwpm: float) -> List[Timing]:
     dit_time = wpm2dit_time(wpm)
     dd = plaintext2dashdots(text)
     timings = []
-    for char in dd:
+    assert(len(dd) == len(text))
+    for char, label in zip(dd, text):
         for mark_or_space in char:
             if mark_or_space == '.':
-                timings.append(Timing(True, fdit_time, DOT, wpm=fwpm))
-                timings.append(Timing(False, fdit_time, SYM_SPACE, wpm=fwpm))
+                timings.append(Timing(True, fdit_time, DOT, wpm=fwpm, label=INCOMPLETE))
+                timings.append(Timing(False, fdit_time, SYM_SPACE, wpm=fwpm, label=INCOMPLETE))
             elif mark_or_space == '-':
-                timings.append(Timing(True, 3 * fdit_time, DASH, wpm=fwpm))
-                timings.append(Timing(False, fdit_time, SYM_SPACE, wpm=fwpm))
+                timings.append(Timing(True, 3 * fdit_time, DASH, wpm=fwpm, label=INCOMPLETE))
+                timings.append(Timing(False, fdit_time, SYM_SPACE, wpm=fwpm, label=INCOMPLETE))
             elif mark_or_space == ' ':
-                timings.append(Timing(False, 7 * dit_time, WORD_SPACE, wpm=wpm))
+                timings.append(Timing(False, 7 * dit_time, WORD_SPACE, wpm=wpm, label=INCOMPLETE))
             else:
                 raise Exception(f"Expected ., -, or space but got {mark_or_space}")
         if timings[-1].stype == SYM_SPACE:
             timings = timings[:-1]
         if char != ' ':
-            timings.append(Timing(False, 3 * dit_time, CHAR_SPACE, wpm=wpm))
+            timings.append(Timing(False, 3 * dit_time, CHAR_SPACE, wpm=wpm, label=INCOMPLETE))
+        if len(timings) > 1:
+            timings[-1].label = label  # this will always be a WORD_SPACE or CHAR_SPACE
     # Remove trailing char or sym spaces
     while len(timings) > 0 and timings[-1].stype in [SYM_SPACE, CHAR_SPACE]:
         timings = timings[:-1]
