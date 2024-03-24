@@ -1,9 +1,20 @@
+// This program uses morse-pro to decode a Codicem timings file
+// used for training or evaluation.  It was written to compare
+// the morse-pro heuristics to my neural network performance.
+// We get generally poor results.
+// by Braddock Gaskill, March 2024
+
 import {readTimingsSet, timingsLabel} from 'tsapps/read_timings'
 import MorseAdaptiveDecoder from '@morsepro/morse-pro-decoder-adaptive'
 
 export async function main() {
-    console.log("Reading...")
-    const timingsSet = await readTimingsSet("/home/braddock/expire/morse/new-test")
+    if (process.argv.length !== 3) {
+        console.log(`USAGE: npx ${process.argv[0]} ${process.argv[1]} [timings_filename]`)
+        process.exit()
+    }    
+    const fname = process.argv[2]
+    console.log(`Reading ${fname}...`)
+    const timingsSet = await readTimingsSet(fname)
     console.log("Read ", timingsSet.length, " Timings")
 
     // for (const timings of timingsSet) {
@@ -29,20 +40,28 @@ export async function main() {
         }
 
         const speedCallback = function(data: any) {
-            console.log("wpm: " + data.wpm)
+            // console.log("wpm: " + data.wpm)
         }
+
+        const wpms: number[] = []
+        for (const timing of timings) {
+            wpms.push(timing.wpm)
+        }
+        const wpm = Math.min(...wpms)
+        const fwpm = Math.max(...wpms)
+        // console.log("TIMING wpm: ", wpm, " fwpm: ", fwpm)
 
         const decoder = new MorseAdaptiveDecoder(
             {
                 messageCallback,
                 speedCallback,
                 dictionaryOptions: [],
-                wpm: 20,
-                fwpm: 20,
+                wpm,
+                fwpm,
             })
 
         for (const timing of timings) {
-            let duration = timing.duration * 100
+            let duration = timing.duration
             duration = timing.is_on ? duration : -duration
             decoder.addTiming(duration)
         }
